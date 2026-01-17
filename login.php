@@ -1,9 +1,10 @@
 <?php
 session_start();
 
+// --- DATABASE CONNECTION ---
 $servername = "localhost";
 $dbusername = "root";
-$dbpassword = "Password"; // 🔴 Replace with your XAMPP root password
+$dbpassword = "Password"; // your XAMPP password
 $dbname = "barangay_db";
 
 $conn = mysqli_connect($servername, $dbusername, $dbpassword, $dbname);
@@ -22,7 +23,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
     if ($username === "" || $password === "") {
         $error = "Please fill in all fields.";
     } else {
-        $stmt = mysqli_prepare($conn, "SELECT id, username, password FROM users WHERE username = ?");
+
+        // ✅ Get role also
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT id, username, password, role FROM users WHERE username = ?"
+        );
         mysqli_stmt_bind_param($stmt, "s", $username);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
@@ -30,13 +36,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
         if ($result && mysqli_num_rows($result) === 1) {
             $user = mysqli_fetch_assoc($result);
 
-            // hashed password
             if (password_verify($password, $user['password'])) {
+
+                // ✅ Save session data
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
 
-                header("Location: dashboard.html"); // Redirect after login
+                // ✅ Role-based redirect
+                if ($user['role'] === 'admin') {
+                    header("Location: admin-dashboard.html");
+                } elseif ($user['role'] === 'staff') {
+                    header("Location: staff-dashboard.html");
+                } elseif ($user['role'] === 'official') {
+                    header("Location: official-dashboard.html");
+                } else {
+                    // fallback
+                    header("Location: dashboard.html");
+                }
                 exit();
+
             } else {
                 $error = "Incorrect password.";
             }
@@ -84,7 +103,7 @@ mysqli_close($conn);
     <?php } ?>
 
     <p class="authorized-p">Authorized Personnel Only</p>
-    <a href="signup.php" class="Register">Register New Account</a>
+    <!-- <a href="signup.php" class="Register">Register New Account</a> -->
 </div>
 
 </body>

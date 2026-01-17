@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
         $error = "Please fill in all fields.";
     } else {
 
-        // ✅ Get role also
+        // Get user with role
         $stmt = mysqli_prepare(
             $conn,
             "SELECT id, username, password, role FROM users WHERE username = ?"
@@ -38,20 +38,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
 
             if (password_verify($password, $user['password'])) {
 
-                // ✅ Save session data
+                // Save session data
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
 
-                // ✅ Role-based redirect
-                if ($user['role'] === 'admin') {
-                    header("Location: admin-dashboard.html");
-                } elseif ($user['role'] === 'staff') {
+                // Role-based redirect
+                $role = strtolower($user['role']);
+
+                if ($role === 'admin') {
+                    header("Location: admin-dashboard.php");
+                } elseif ($role === 'staff') {
                     header("Location: staff-dashboard.html");
-                } elseif ($user['role'] === 'official') {
+                } elseif ($role === 'official') {
                     header("Location: official-dashboard.html");
                 } else {
-                    // fallback
                     header("Location: dashboard.html");
                 }
                 exit();
@@ -59,6 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
             } else {
                 $error = "Incorrect password.";
             }
+
         } else {
             $error = "Account not found.";
         }

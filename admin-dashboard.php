@@ -1,3 +1,21 @@
+<?php
+session_start();
+
+// Connect to DB
+$conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+// Get total residents
+$result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM registered_resi");
+$row = mysqli_fetch_assoc($result);
+$total_residents = $row['total'];
+
+// Close connection
+mysqli_close($conn);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +53,7 @@
     <section class="stats">
         <div class="stat-card">
             <h3>Total Residents</h3>
-            <p>1,245</p>
+            <p><?php echo number_format($total_residents); ?></p>
         </div>
         <div class="stat-card">
             <h3>Total Households</h3>
@@ -53,7 +71,7 @@
 
     <!-- ACTION CARDS -->
     <section class="actions">
-    <a href="resident-profiling.html" class="action-card">
+    <a href="resident-profiling.php" class="action-card">
         Resident Profiling
         <p>Manage resident and household information</p>
     </a>

@@ -76,7 +76,7 @@ mysqli_close($conn);
         <p>Manage resident and household information</p>
     </a>
 
-    <a href="household-management.html" class="action-card">
+    <a href="household-management.php" class="action-card">
         Household Management
         <p>Group Residents into households</p>
     </a>
@@ -111,7 +111,7 @@ mysqli_close($conn);
         <p>System configuration</p>
     </a>
 
-    <a href="create-staff-account.html" class="action-card">
+    <a href="signup.php" class="action-card">
         Create Staff Account
         <p>Create new staff accounts</p>
     </a>

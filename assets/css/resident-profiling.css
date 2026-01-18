@@ -152,19 +152,13 @@ body {
 }
 
 .edit {
-    background: #1e90ff;
-}
-
-.edit:hover {
-    background: #1c7cd6;
+    background: transparent;
+    color: #000;
 }
 
 .delete {
-    background: #ff4c4c;
-}
-
-.delete:hover {
-    background: #d43c3c;
+    background: transparent;
+    color: #d43c3c;
 }
 
 .modal-overlay {

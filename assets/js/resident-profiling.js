@@ -35,10 +35,13 @@ document.querySelectorAll(".edit").forEach(btn => {
         form.first_name.value = btn.dataset.first;
         form.middle_name.value = btn.dataset.middle;
         form.last_name.value = btn.dataset.last;
+        form.address.value = btn.dataset.address;
+        form.birthdate.value = btn.dataset.birthdate;
         form.age.value = btn.dataset.age;
         form.gender.value = btn.dataset.gender;
         form.civil_status.value = btn.dataset.civil;
         form.occupation.value = btn.dataset.occupation;
+        form.voters_registration_no.value = btn.dataset.voters;
         form.contact.value = btn.dataset.contact;
 
         form.querySelector("button").innerText = "Update Resident";

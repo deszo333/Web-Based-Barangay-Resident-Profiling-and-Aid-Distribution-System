@@ -59,10 +59,13 @@ if (isset($_SESSION['role'])) {
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Addresss</th>
+                        <th>Birthdate</th>
                         <th>Age</th>
                         <th>Gender</th>
                         <th>Civil Status</th>
                         <th>Occupation</th>
+                        <th>Voters Registration Number</th>
                         <th>Contact</th>
                         <th>Action</th>
                     </tr>
@@ -97,10 +100,13 @@ if (isset($_SESSION['role'])) {
                     while ($row = mysqli_fetch_assoc($result)) {
                         echo "<tr>
                             <td>{$row['first_name']} {$row['middle_name']} {$row['last_name']}</td>
+                            <td>{$row['address']}</td>
+                            <td>{$row['birthdate']}</td>
                             <td>{$row['age']}</td>
                             <td>{$row['gender']}</td>
                             <td>{$row['civil_status']}</td>
                             <td>{$row['occupation']}</td>
+                            <td>{$row['voters_registration_no']}</td>
                             <td>{$row['contact']}</td>
                             <td>
                                 <button class='edit'
@@ -108,10 +114,13 @@ if (isset($_SESSION['role'])) {
                                     data-first='{$row['first_name']}'
                                     data-middle='{$row['middle_name']}'
                                     data-last='{$row['last_name']}'
+                                    data-address='{$row['address']}'
+                                    data-birthdate='{$row['birthdate']}'
                                     data-age='{$row['age']}'
                                     data-gender='{$row['gender']}'
                                     data-civil='{$row['civil_status']}'
                                     data-occupation='{$row['occupation']}'
+                                    data-voters='{$row['voters_registration_no']}'
                                     data-contact='{$row['contact']}'>
                                     <i class='fa-solid fa-pen-to-square'></i>
                                 </button>
@@ -150,6 +159,12 @@ if (isset($_SESSION['role'])) {
             <label>Last Name</label>
             <input type="text" name="last_name" placeholder="Last Name" required>
 
+            <label>Address</label>
+            <input type="text" name="address" placeholder="Address">
+
+            <label>Birthdate</label>
+            <input type="date" name="birthdate" placeholder="Birthdate">
+
             <label>Age</label>
             <input type="number" name="age" placeholder="Age" required>
 
@@ -171,6 +186,9 @@ if (isset($_SESSION['role'])) {
 
             <label>Occupation</label>
             <input type="text" name="occupation" placeholder="Occupation">
+
+            <label>Voters Registration Number</label>
+            <input type="text" name="voters_registration_no" placeholder="Voters Registration Number">
 
             <label>Contact</label>
             <input type="tel" name="contact" placeholder="Contact Number" maxlength="11" pattern="[0-9]{11}" inputmode="numeric">

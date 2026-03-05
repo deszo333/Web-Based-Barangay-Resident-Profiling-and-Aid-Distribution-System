@@ -206,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof Popup !== "undefined") {
                 Popup.open({
                     title: "Confirm Delete",
-                    message: "Are you sure you want to delete this household? This action cannot be undone.",
+                    message: "Are you sure you want to deleted this household? This action cannot be undone.",
                     type: "danger",
                     onOk: () => deleteHousehold(id, deleteBtn)
                 });

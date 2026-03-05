@@ -379,7 +379,7 @@ fetch("assets/popup/popup.html")
 
 <script src="assets/popup/popup.js" defer></script>
 
-<script src="assets/js/household-managements.js"></script>
+<script src="assets/js/household-managementss.js"></script>
 <script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
 </body>
 </html>

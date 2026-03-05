@@ -38,7 +38,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li>
-                <a href="distribution-page.html" class="<?= ($currentPage == 'distribution-page.html') ? 'active' : '' ?>">
+                <a href="distribution-page.php" class="<?= ($currentPage == 'distribution-page.php') ? 'active' : '' ?>">
                     <i class="fa-solid fa-qrcode"></i> <span>Distribution Page</span>
                 </a>
             </li>

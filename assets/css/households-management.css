@@ -431,88 +431,180 @@ body {
 .head-picker {
     position: relative;
 }
-
-/* SHARED MINI PICKER */
+/* Ensure the parent wrappers can contain the absolute dropdown */
+.form-group {
+    position: relative; 
+}
+/* ===============================
+   SECONDARY SELECTION MODAL
+================================ */
 .resident-picker {
-    position: fixed;                 /* needed for dragging */
-    top: 120px;
+    position: fixed;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    width: 520px;
-
-    background: #144876;
-    color: #fff;
-
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    z-index: 300;
-
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 650px;
+    max-width: 95vw;
+    max-height: 85vh; 
+    
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5), 0 20px 40px rgba(0,0,0,0.2);
+    z-index: 1050; 
+    
     opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: all 0.4s ease;
-    cursor: move;
+    visibility: hidden;
+    
+    /* Layout setup to pin header and scroll table */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .resident-picker.show {
     opacity: 1;
-    max-height: 280px;
-    overflow-y: auto;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
 }
 
 /* ===============================
-   TABLE INSIDE PICKER
+   NEW MODAL HEADER
 ================================ */
+.picker-custom-header {
+    padding: 20px 25px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    z-index: 10;
+}
+
+.picker-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.picker-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #144876; /* Brand Blue */
+}
+
+.picker-title i {
+    font-size: 22px;
+}
+
+.picker-title h4 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Subtle 'X' Close Button */
+.close-picker-btn {
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.close-picker-btn:hover {
+    color: #ef4444; /* Turns red on hover */
+    transform: scale(1.1);
+}
+
+/* Search Bar */
+#memberSearch {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#memberSearch:focus {
+    border-color: #144876; 
+    box-shadow: 0 0 0 3px rgba(20, 72, 118, 0.1);
+    background-color: #ffffff;
+}
+
+/* ===============================
+   SCROLLABLE TABLE AREA
+================================ */
+.picker-table-wrapper {
+    overflow-y: auto;
+    max-height: calc(85vh - 145px); /* Subtracts header height to prevent page overflow */
+}
+
 .resident-picker table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
 }
 
-.resident-picker th {
-    padding: 10px;
-    background: #144876;
-    color: #fff;
+/* Sticky Column Headers */
+.resident-picker thead th {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    padding: 12px 25px;
+    color: #64748b;
     font-weight: 600;
-    text-align: center;
-    border-bottom: 3px solid #F8E431;
+    text-align: left;
+    border-bottom: 2px solid #f1f5f9;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 5;
 }
 
 .resident-picker td {
-    padding: 8px;
-    border-bottom: 1px solid #ffffff;
-    text-align: center;
+    padding: 12px 25px;
+    border-bottom: 1px solid #f8fafc;
+    text-align: left;
+    color: #334155;
+}
+
+.resident-picker tbody tr:hover {
+    background: #f8fafc;
 }
 
 .resident-picker td:last-child {
-    padding-bottom: 18px;
+    text-align: right;
 }
 
-/* ===============================
-   SEARCH INPUT
-================================ */
-#memberSearch {
-    width: 100%;
-    padding: 10px;
-    font-size: 13px;
-    border-radius: 5px;
-    border: none;
-    background-color: #fbfbfbfa;
-}
-
-/* ===============================
-   PICKER BUTTON (HEAD / MEMBER)
-================================ */
+/* Action Buttons */
 .picker-action {
-    background: #fff;
-    color: #000;
+    background: #e2e8f0;
+    color: #0f172a;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 12px;
-    cursor: pointer;
     font-weight: 600;
-    padding: 5px 10px;
+    padding: 8px 0; 
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+
+    width: 95px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px; 
+    
+    user-select: none; 
+}
+
+.picker-action i {
+    pointer-events: none; 
 }
 
 .picker-action:hover {
@@ -655,8 +747,8 @@ body {
 .members-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(20, 72, 118, 0.5); /* semi-transparent with brand color */
-    backdrop-filter: blur(6px); /* frosted glass effect */
+    background: rgba(20, 72, 118, 0.5); 
+    backdrop-filter: blur(6px); 
     display: none; 
     justify-content: center;
     align-items: center;
@@ -682,7 +774,7 @@ body {
 }
 
 .members-card:hover {
-    transform: translateY(-40px) scale(1); /* subtle hover effect */
+    transform: translateY(-40px) scale(1); 
 }
 
 .members-header {
@@ -788,4 +880,139 @@ body {
     background: #000;
     color: #fff;
     border-color: #000;
+}
+
+/* ===============================
+   DYNAMIC MEMBERS TABLE 
+================================ */
+.add-member-btn {
+    background: #144876;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.add-member-btn:hover {
+    background: #0f355a;
+}
+
+.members-table-container {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f8fafc;
+    max-height: 180px; 
+    overflow-y: auto;
+}
+
+.inner-members-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.inner-members-table th {
+    background: #e2e8f0;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #334155;
+    position: sticky;
+    top: 0;
+}
+
+.inner-members-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #1e293b;
+    background: #fff;
+}
+
+.inner-members-table tr:last-child td {
+    border-bottom: none;
+}
+
+.remove-member-btn {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.remove-member-btn:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+
+/* ===============================
+   PICKER MULTI-SELECT UPGRADES
+================================ */
+.picker-head-banner {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #bae6fd;
+}
+
+.picker-custom-footer {
+    padding: 15px 25px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.picker-selected-count {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.picker-done-btn {
+    background: #144876;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.picker-done-btn:hover {
+    background: #0f355a;
+}
+
+.picker-action.selected-state {
+    background: #10b981 !important; 
+    color: #ffffff !important;
+}
+
+
+.picker-action {
+    user-select: none; 
+}
+
+.picker-action i {
+    pointer-events: none; 
 }

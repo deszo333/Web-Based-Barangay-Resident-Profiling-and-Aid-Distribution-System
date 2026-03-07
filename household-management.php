@@ -225,6 +225,8 @@ if (isset($_SESSION['role'])) {
         </div>
 
         <!-- BODY -->
+         
+        
 <form id="addResidentForm">
     <input type="hidden" id="resident_id" name="resident_id">
 
@@ -232,7 +234,7 @@ if (isset($_SESSION['role'])) {
     <div class="form-row two-col">
         <div class="form-group">
             <label>Household Number</label>
-            <input type="text" name="household_number">
+            <input type="text" name="household_number" readonly style="background-color: #f8fafc; cursor: not-allowed; color: #64748b;">
         </div>
 
         <div class="form-group head-picker">
@@ -305,16 +307,28 @@ if (isset($_SESSION['role'])) {
 
     <!-- ROW 3 -->
     <div class="form-group members-picker">
-        <label>Household Members</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="margin: 0;">Household Members</label>
+            <button type="button" id="openMembersPickerBtn" class="add-member-btn">
+                <i class="fa-solid fa-plus"></i> Add Member
+            </button>
+        </div>
+        
+        <input type="hidden" name="household_members" id="membersInput">
 
-        <input type="text"
-               name="household_members"
-               id="membersInput"
-               autocomplete="off"
-               placeholder="Click to add household members">
-
-        <!-- Selected members actions -->
-        <div id="membersActions" class="members-actions"></div>
+        <div class="members-table-container">
+            <table class="inner-members-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th style="width: 70px; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTableBody">
+                    <tr><td colspan="2" style="text-align: center; color: #94a3b8; font-style: italic;">No members added yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- ROW 4 -->
@@ -323,7 +337,7 @@ if (isset($_SESSION['role'])) {
 
         <div class="rfid-wrapper">
             <input type="text" name="rfid" id="rfidInput"
-                required placeholder="Enter RFID Number">
+                placeholder="Enter RFID Number">
 
             <button type="button" class="rfid-btn" id="scanRfidBtn">
                 <i class="fa-solid fa-id-card"></i>
@@ -381,5 +395,52 @@ fetch("assets/popup/popup.html")
 
 <script src="assets/js/household-managementss.js"></script>
 <script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+
+<script src="rfid/rfid_scanner.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const scanBtn = document.getElementById("scanRfidBtn");
+    const rfidInput = document.getElementById("rfidInput");
+    const rfidOverlay = document.getElementById("rfidOverlay");
+    const cancelRfidBtn = document.getElementById("cancelRfid");
+
+    // scan button click?
+    if (scanBtn) {
+        scanBtn.addEventListener("click", () => {
+            // show overlay
+            if (rfidOverlay) rfidOverlay.style.display = "flex";
+
+            // !! if scanner is not waiting, prompt to activate
+            if (typeof rfidPort === 'undefined' || !rfidPort) {
+                // We pass 'assignRFIDToInput' as the callback function
+                connectRFIDScanner(assignRFIDToInput, scanBtn);
+            }
+        });
+    }
+
+    // uid is console logged
+    function assignRFIDToInput(scannedID) {
+        console.log("Assigning RFID to Household:", scannedID);
+        
+        // uid to input box
+        if (rfidInput) {
+            rfidInput.value = scannedID;
+        }
+        
+        // hide after
+        if (rfidOverlay) {
+            rfidOverlay.style.display = "none";
+        }
+    }
+
+    // close
+    if (cancelRfidBtn) {
+        cancelRfidBtn.addEventListener("click", () => {
+            if (rfidOverlay) rfidOverlay.style.display = "none";
+        });
+    }
+});
+</script>
 </body>
 </html>

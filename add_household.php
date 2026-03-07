@@ -14,9 +14,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $head_of_family = trim($_POST['head_of_family'] ?? '');
     $address = trim($_POST['address'] ?? '');
     $household_members = trim($_POST['household_members'] ?? '');
-    $rfid = trim($_POST['rfid'] ?? '');
+    $rfid_raw = trim($_POST['rfid'] ?? '');
+    $rfid = ($rfid_raw === '') ? null : $rfid_raw;
 
-    if($address === '' || $household_members === '' || $rfid === ''){
+    if($address === '' || $household_members === ''){
         echo "Please fill all required fields";
         exit;
     }

@@ -11,20 +11,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const householdId = document.getElementById('resident_id');
     const headInput = document.getElementById("headInput");
-    const membersInput = document.getElementById("membersInput");
     const addressInput = document.querySelector("input[name='address']");
+    
+    const membersInput = document.getElementById("membersInput"); 
+    const openMembersPickerBtn = document.getElementById("openMembersPickerBtn");
+    const membersTableBody = document.getElementById("membersTableBody");
+
     const residentPicker = document.getElementById("residentPicker");
-    const memberSearch = document.getElementById("memberSearch");
 
     const modalTitle = document.getElementById("modalTitle");
     const modalIcon = document.getElementById("modalIcon");
     const saveBtn = document.getElementById("saveHouseholdBtn");
 
-    const membersActions = document.getElementById("membersActions");
-
     const membersOverlay = document.getElementById("membersOverlay");
     const membersBody = document.getElementById("membersBody");
-    const closeMembersOverlay = document.getElementById("closeMembersOverlay");
 
     const scanBtn = document.getElementById("scanRfidBtn");
     const rfidOverlay = document.getElementById("rfidOverlay");
@@ -32,10 +32,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const rfidInput = document.getElementById("rfidInput");
 
     /* =========================
+       ESCAPE CSS TRANSFORM TRAP
+    ========================= */
+    if (residentPicker) {
+        document.body.appendChild(residentPicker);
+    }
+
+    /* =========================
        STATE VARIABLES
     ========================= */
-    let pickerMode = null; // "head" | "members"
-    let dragging = false, offsetX = 0, offsetY = 0;
+    let pickerMode = null; 
+    let tempSelectedMembers = []; 
     let rfidBuffer = "";
     let scanning = false;
 
@@ -43,250 +50,245 @@ document.addEventListener("DOMContentLoaded", () => {
        MODAL FUNCTIONS
     ========================= */
     function openModal() {
-        modal.classList.add('show');
-        overlay.classList.add('show');
+        if (modal) modal.classList.add('show');
+        if (overlay) overlay.classList.add('show');
     }
 
     function closeModal() {
-        modal.classList.remove('show');
-        overlay.classList.remove('show');
+        if (modal) modal.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
         togglePicker(false);
     }
 
     /* =========================
-       PICKER FUNCTIONS
+       MEMBER TABLE HELPERS (MAIN FORM)
     ========================= */
+    function removeMemberFromInput(name) {
+        if (!membersInput) return;
+        const current = membersInput.value.split(',').map(m => m.trim()).filter(m => m && m !== name);
+        membersInput.value = current.join(', ');
+        renderMembersTable();
+    }
+
+    function renderMembersTable() {
+        if (!membersTableBody || !membersInput) return;
+        membersTableBody.innerHTML = "";
+
+        const members = membersInput.value.split(',').map(m => m.trim()).filter(Boolean);
+
+        if (members.length === 0) {
+            membersTableBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #94a3b8; font-style: italic;">No members added yet.</td></tr>`;
+            return;
+        }
+
+        members.forEach(name => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${name}</td>
+                <td style="text-align: center;">
+                    <button type="button" class="remove-member-btn" data-name="${name}">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            membersTableBody.appendChild(tr);
+        });
+    }
+
+    /* =========================
+       INITIALIZE PICKER UI
+    ========================= */
+    function initPickerUI() {
+        if (!residentPicker) return;
+        const pickerTable = residentPicker.querySelector("table");
+        if (!pickerTable) return;
+        
+        if (document.querySelector(".picker-custom-header")) return;
+
+        const firstTr = pickerTable.querySelector("thead tr:first-child");
+        if (firstTr) firstTr.remove();
+
+        const headerHTML = `
+            <div class="picker-custom-header">
+                <div class="picker-top-bar">
+                    <div class="picker-title">
+                        <i class="fa-solid fa-users"></i>
+                        <h4 id="pickerDynamicTitle">Registered Residents</h4>
+                    </div>
+                    <button type="button" class="close-picker-btn">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <input type="text" id="memberSearch" placeholder="Search resident by name...">
+            </div>
+        `;
+        pickerTable.insertAdjacentHTML("beforebegin", headerHTML);
+
+        const footerHTML = `
+            <div class="picker-custom-footer" id="pickerFooter" style="display:none;">
+                <div class="picker-selected-count">
+                    <span id="pickerCount">0</span> member(s) selected
+                </div>
+                <button type="button" class="picker-done-btn" id="pickerDoneBtn">Confirm Selection</button>
+            </div>
+        `;
+        residentPicker.insertAdjacentHTML("beforeend", footerHTML);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'picker-table-wrapper';
+        pickerTable.parentNode.insertBefore(wrapper, pickerTable);
+        wrapper.appendChild(pickerTable);
+
+        // SMART SEARCH: Hides Head of Family dynamically during search
+        document.getElementById("memberSearch")?.addEventListener("keyup", function () {
+            const filter = this.value.toLowerCase();
+            const currentHead = (pickerMode === "members" && headInput) ? headInput.value.trim() : "";
+
+            document.querySelectorAll("#residentPicker tbody tr").forEach(row => {
+                const btn = row.querySelector(".picker-action");
+                const rowName = btn ? btn.dataset.name.trim() : "";
+
+                // Force hide if they are the head of family
+                if (pickerMode === "members" && rowName === currentHead && currentHead !== "") {
+                    row.style.display = "none";
+                } else {
+                    row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+                }
+            });
+        });
+
+        document.querySelector(".close-picker-btn")?.addEventListener("click", () => togglePicker(false));
+        
+        document.getElementById("pickerDoneBtn")?.addEventListener("click", () => {
+            if (membersInput) {
+                membersInput.value = tempSelectedMembers.join(', ');
+                renderMembersTable();
+            }
+            togglePicker(false);
+        });
+    }
+    
+    initPickerUI();
+
+    /* =========================
+       PICKER STATE MANAGEMENT
+    ========================= */
+    function updatePickerButtons() {
+        if (pickerMode === "members") {
+            document.getElementById("pickerFooter").style.display = "flex";
+            document.getElementById("pickerDynamicTitle").innerText = "Select Members";
+            document.getElementById("pickerCount").innerText = tempSelectedMembers.length;
+
+            document.querySelectorAll(".picker-action").forEach(btn => {
+                const name = btn.dataset.name.trim(); 
+                if (tempSelectedMembers.includes(name)) {
+                    btn.classList.add("selected-state");
+                    btn.innerHTML = `<i class="fa-solid fa-check"></i> Selected`;
+                } else {
+                    btn.classList.remove("selected-state");
+                    btn.innerHTML = `Select`;
+                }
+            });
+        } else {
+            document.getElementById("pickerFooter").style.display = "none";
+            document.getElementById("pickerDynamicTitle").innerText = "Select Head of Family";
+
+            document.querySelectorAll(".picker-action").forEach(btn => {
+                btn.classList.remove("selected-state");
+                btn.innerHTML = `Select`;
+            });
+        }
+    }
+
     function togglePicker(show) {
+        if (!residentPicker) return;
         if (show) {
             residentPicker.classList.add("show");
+            
+            if (pickerMode === "members" && membersInput) {
+                tempSelectedMembers = membersInput.value.split(',').map(m => m.trim()).filter(Boolean);
+            }
+
+            const searchInput = document.getElementById("memberSearch");
+            if (searchInput) searchInput.value = "";
+
+            // SMART FILTER: Hide the current Head of Family row instantly when opening members
+            const currentHead = (pickerMode === "members" && headInput) ? headInput.value.trim() : "";
+            document.querySelectorAll("#residentPicker tbody tr").forEach(row => {
+                const btn = row.querySelector(".picker-action");
+                const rowName = btn ? btn.dataset.name.trim() : "";
+
+                if (pickerMode === "members" && rowName === currentHead && currentHead !== "") {
+                    row.style.display = "none"; // Hide Head
+                } else {
+                    row.style.display = ""; // Show everyone else
+                }
+            });
+
             updatePickerButtons();
         } else {
             residentPicker.classList.remove("show");
             pickerMode = null;
+            tempSelectedMembers = []; 
         }
     }
 
-    function updatePickerButtons() {
-        document.querySelectorAll(".picker-action").forEach(btn => {
-            btn.innerText = pickerMode === "members" ? "Add" : "Select";
+    /* =========================
+       OPEN PICKER MODAL EVENTS
+    ========================= */
+    if (headInput) {
+        headInput.readOnly = true; 
+        headInput.style.cursor = "pointer";
+        headInput.addEventListener("click", () => {
+            pickerMode = "head";
+            togglePicker(true);
+        });
+    }
+
+    if (openMembersPickerBtn) {
+        openMembersPickerBtn.addEventListener("click", () => {
+            pickerMode = "members";
+            togglePicker(true);
         });
     }
 
     /* =========================
-       MEMBER INPUT HELPERS
+       MAIN FORM BUTTONS (Add Household)
     ========================= */
-    function addMemberToInput(name) {
-        const current = membersInput.value
-            .split(',')
-            .map(m => m.trim())
-            .filter(Boolean);
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            if (form) form.reset();
+            if (householdId) householdId.value = "";
+            if (membersInput) membersInput.value = ""; 
+            renderMembersTable(); 
 
-        if (!current.includes(name)) {
-            current.push(name);
-            membersInput.value = current.join(', ');
-            renderMembersActions();
-        }
-    }
+            if (saveBtn) saveBtn.innerText = "Save Household";
+            if (modalTitle) modalTitle.innerText = "Add New Household";
+            if (modalIcon) modalIcon.className = "fa-solid fa-house";
 
-    function removeMemberFromInput(name) {
-        const current = membersInput.value
-            .split(',')
-            .map(m => m.trim())
-            .filter(m => m && m !== name);
-
-        membersInput.value = current.join(', ');
-        renderMembersActions();
-    }
-
-    function renderMembersActions() {
-        if (!membersActions) return;
-        membersActions.innerHTML = "";
-
-        const members = membersInput.value
-            .split(',')
-            .map(m => m.trim())
-            .filter(Boolean);
-
-        members.forEach(name => {
-            const tag = document.createElement("span");
-            tag.className = "member-tag";
-            tag.innerHTML = `${name} ✕`;
-            tag.onclick = () => removeMemberFromInput(name);
-            membersActions.appendChild(tag);
-        });
-
-        membersInput.classList.toggle("expanded", members.length > 0);
-    }
-
-    /* =========================
-       OPEN PICKER ON FOCUS
-    ========================= */
-    headInput.addEventListener("focus", () => {
-        pickerMode = "head";
-        togglePicker(true);
-    });
-
-    membersInput.addEventListener("focus", () => {
-        pickerMode = "members";
-        togglePicker(true);
-    });
-
-    /* =========================
-       PICKER SELECTION
-    ========================= */
-    document.addEventListener("click", (e) => {
-
-        // MEMBER COUNT OVERLAY
-        if (e.target.classList.contains("member-count")) {
-    const members = (e.target.dataset.members || "")
-        .split(",")
-        .map(m => m.trim())
-        .filter(Boolean);
-
-    membersBody.innerHTML = members.length
-        ? "<ul>" + members.map(m => `<li>${m}</li>`).join("") + "</ul>"
-        : "<p><i>No members found</i></p>";
-
-    membersOverlay.classList.add("show");
-}
-
-        // CLOSE MEMBER OVERLAY
-        if (e.target.id === "closeMembersOverlay" || e.target.id === "membersOverlay") {
-            membersOverlay.classList.remove("show");
-        }
-
-        // PICKER ACTION
-        if (e.target.classList.contains("picker-action")) {
-            const name = e.target.dataset.name;
-            const address = e.target.dataset.address;
-
-            if (pickerMode === "head") {
-                headInput.value = name;
-                addressInput.value = address;
-                togglePicker(false);
-            } else if (pickerMode === "members") {
-                addMemberToInput(name);
-            }
-        }
-
-        // CLICK OUTSIDE PICKER
-        if (!e.target.closest("#residentPicker") &&
-            e.target !== headInput &&
-            e.target !== membersInput) {
-            togglePicker(false);
-        }
-
-        // EDIT HOUSEHOLD
-        const editBtn = e.target.closest('.edit');
-        if (editBtn) {
-            e.stopPropagation();
-            householdId.value = editBtn.dataset.id || "";
-            form.household_number.value = editBtn.dataset.number || "";
-            headInput.value = editBtn.dataset.head || "";
-            addressInput.value = editBtn.dataset.address || "";
-            membersInput.value = editBtn.dataset.members || "";
-            renderMembersActions();
-            form.rfid.value = editBtn.dataset.rfid || "";
-
-            saveBtn.innerText = "Update Household";
-            modalTitle.innerText = "Edit Household";
-            modalIcon.className = "fa-solid fa-pen-to-square";
+            fetch('get_next_household_number.php')
+                .then(res => res.text())
+                .then(num => { if(form.household_number) form.household_number.value = num; })
+                .catch(err => console.error(err));
 
             openModal();
-            return;
-        }
+        });
+    }
 
-        // DELETE HOUSEHOLD
-        const deleteBtn = e.target.closest('.delete');
-        if (deleteBtn) {
-            e.stopPropagation();
-            const id = deleteBtn.dataset.id;
-            if (!id) return;
-
-            if (typeof Popup !== "undefined") {
-                Popup.open({
-                    title: "Confirm Delete",
-                    message: "Are you sure you want to deleted this household? This action cannot be undone.",
-                    type: "danger",
-                    onOk: () => deleteHousehold(id, deleteBtn)
-                });
-            } else {
-                if (confirm("Are you sure you want to delete this household?")) {
-                    deleteHousehold(id, deleteBtn);
-                }
-            }
-            return;
-        }
-
-    });
-
-    // CLOSE MEMBERS OVERLAY BUTTON
-    closeMembersOverlay.addEventListener("click", () => {
-        membersOverlay.classList.remove("show");
-    });
-
-    membersOverlay.addEventListener("click", (e) => {
-        if (e.target === membersOverlay) {
-            membersOverlay.classList.remove("show");
-        }
-    });
-
-    /* =========================
-       DRAG PICKER
-    ========================= */
-    residentPicker.addEventListener("mousedown", (e) => {
-        dragging = true;
-        offsetX = e.clientX - residentPicker.offsetLeft;
-        offsetY = e.clientY - residentPicker.offsetTop;
-    });
-
-    document.addEventListener("mousemove", (e) => {
-        if (!dragging) return;
-        residentPicker.style.left = (e.clientX - offsetX) + "px";
-        residentPicker.style.top = (e.clientY - offsetY) + "px";
-    });
-
-    document.addEventListener("mouseup", () => dragging = false);
-
-    /* =========================
-       ADD HOUSEHOLD BUTTON
-    ========================= */
-    addBtn.addEventListener('click', () => {
-        form.reset();
-        householdId.value = "";
-        membersActions.innerHTML = "";
-        membersInput.classList.remove("expanded");
-
-        saveBtn.innerText = "Save Household";
-        modalTitle.innerText = "Add New Household";
-        modalIcon.className = "fa-solid fa-house";
-
-        fetch('get_next_household_number.php')
-            .then(res => res.text())
-            .then(num => form.household_number.value = num);
-
-        openModal();
-    });
-
-    closeBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (overlay) overlay.addEventListener('click', closeModal);
 
     /* =========================
        FORM SUBMISSION
     ========================= */
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        form.household_members.value = membersInput.value
-            .split(',')
-            .map(m => m.trim())
-            .filter(Boolean)
-            .join(', ');
-
-        fetch('add_household.php', {
-            method: 'POST',
-            body: new FormData(form)
-        })
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            
+            fetch('add_household.php', {
+                method: 'POST',
+                body: new FormData(form)
+            })
             .then(res => res.text())
             .then(data => {
                 if (data.trim() === 'success') {
@@ -294,64 +296,151 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     alert("Failed to save: " + data);
                 }
-            });
-    });
-
-    /* =========================
-       DELETE FUNCTION
-    ========================= */
-    function deleteHousehold(id, btn) {
-        fetch('delete_household.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `id=${encodeURIComponent(id)}`
-        })
-        .then(res => res.text())
-        .then(data => {
-            if (data.trim() === 'success') {
-                btn.closest('tr')?.remove();
-            } else {
-                alert("Failed to delete: " + data);
-            }
-        })
-        .catch(err => alert("Server error: " + err));
-    }
-
-    /* =========================
-       MEMBER SEARCH FILTER
-    ========================= */
-    memberSearch.addEventListener("keyup", function () {
-        const filter = this.value.toLowerCase();
-        document.querySelectorAll("#residentPicker tbody tr").forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+            })
+            .catch(err => alert("Error: " + err));
         });
-    });
+    }
 
     /* =========================
        RFID SCANNER
     ========================= */
-    scanBtn.addEventListener("click", () => {
-        rfidOverlay.classList.add("show");
-        rfidBuffer = "";
-        scanning = true;
-    });
+    if (scanBtn) {
+        scanBtn.addEventListener("click", () => {
+            if (rfidOverlay) rfidOverlay.classList.add("show");
+            rfidBuffer = "";
+            scanning = true;
+        });
+    }
 
-    cancelRfid.addEventListener("click", () => {
-        rfidOverlay.classList.remove("show");
-        scanning = false;
-        rfidBuffer = "";
-    });
+    if (cancelRfid) {
+        cancelRfid.addEventListener("click", () => {
+            if (rfidOverlay) rfidOverlay.classList.remove("show");
+            scanning = false;
+            rfidBuffer = "";
+        });
+    }
 
     document.addEventListener("keydown", (e) => {
         if (!scanning) return;
-
         if (e.key === "Enter") {
-            rfidInput.value = rfidBuffer;
-            rfidOverlay.classList.remove("show");
+            if (rfidInput) rfidInput.value = rfidBuffer;
+            if (rfidOverlay) rfidOverlay.classList.remove("show");
             scanning = false;
             rfidBuffer = "";
         } else if (e.key.length === 1) {
             rfidBuffer += e.key;
+        }
+    });
+
+    /* =========================
+       GLOBAL CLICK LISTENER
+    ========================= */
+    document.addEventListener("click", (e) => {
+
+        const editBtn = e.target.closest(".edit");
+        if (editBtn) {
+            e.preventDefault();
+            
+            if (form) form.reset();
+            if (householdId) householdId.value = editBtn.dataset.id;
+            if (form.household_number) form.household_number.value = editBtn.dataset.number;
+            if (headInput) headInput.value = editBtn.dataset.head;
+            if (addressInput) addressInput.value = editBtn.dataset.address;
+            if (rfidInput) rfidInput.value = editBtn.dataset.rfid;
+            
+            if (membersInput) {
+                membersInput.value = editBtn.dataset.members;
+                renderMembersTable();
+            }
+
+            if (saveBtn) saveBtn.innerText = "Update Household";
+            if (modalTitle) modalTitle.innerText = "Edit Household";
+            if (modalIcon) modalIcon.className = "fa-solid fa-pen-to-square";
+
+            openModal();
+        }
+
+        const deleteBtn = e.target.closest(".delete");
+        if (deleteBtn) {
+            e.preventDefault();
+            const id = deleteBtn.dataset.id;
+            
+            if (confirm("Are you sure you want to delete this household?")) {
+                fetch('delete_household.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `id=${encodeURIComponent(id)}`
+                })
+                .then(res => res.text())
+                .then(data => {
+                    if (data.trim() === 'success') {
+                        deleteBtn.closest('tr').remove();
+                    } else {
+                        alert("Failed to delete: " + data);
+                    }
+                })
+                .catch(err => alert("Server error: " + err));
+            }
+        }
+
+        const pickerBtn = e.target.closest(".picker-action");
+        if (pickerBtn) {
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            
+            const name = pickerBtn.dataset.name.trim(); 
+            const address = pickerBtn.dataset.address;
+
+            if (pickerMode === "head") {
+                if (headInput) headInput.value = name;
+                if (addressInput) addressInput.value = address;
+                
+                // If the new head was previously selected as a member, remove them!
+                if (membersInput) {
+                    let currentMembers = membersInput.value.split(',').map(m => m.trim()).filter(Boolean);
+                    if (currentMembers.includes(name)) {
+                        currentMembers = currentMembers.filter(m => m !== name);
+                        membersInput.value = currentMembers.join(', ');
+                        renderMembersTable();
+                    }
+                }
+                togglePicker(false);
+            } 
+            else if (pickerMode === "members") {
+                if (tempSelectedMembers.includes(name)) {
+                    tempSelectedMembers = tempSelectedMembers.filter(m => m !== name);
+                    pickerBtn.classList.remove("selected-state");
+                    pickerBtn.innerHTML = `Select`;
+                } else {
+                    tempSelectedMembers.push(name);
+                    pickerBtn.classList.add("selected-state");
+                    pickerBtn.innerHTML = `<i class="fa-solid fa-check"></i> Selected`;
+                }
+                
+                const countText = document.getElementById("pickerCount");
+                if (countText) countText.innerText = tempSelectedMembers.length;
+            }
+        }
+
+        const removeMemberBtn = e.target.closest(".remove-member-btn");
+        if (removeMemberBtn) {
+            e.preventDefault();
+            const name = removeMemberBtn.dataset.name;
+            removeMemberFromInput(name); 
+        }
+
+        if (e.target.classList.contains("member-count")) {
+            const members = (e.target.dataset.members || "").split(",").map(m => m.trim()).filter(Boolean);
+            if (membersBody) {
+                membersBody.innerHTML = members.length
+                    ? "<ul>" + members.map(m => `<li>${m}</li>`).join("") + "</ul>"
+                    : "<p><i>No members found</i></p>";
+                if (membersOverlay) membersOverlay.classList.add("show");
+            }
+        }
+
+        if (e.target.id === "closeMembersOverlay" || e.target.id === "membersOverlay") {
+            if (membersOverlay) membersOverlay.classList.remove("show");
         }
     });
 

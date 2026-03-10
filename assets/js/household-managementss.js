@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const rfidInput = document.getElementById("rfidInput");
 
     /* =========================
-       ESCAPE CSS TRANSFORM TRAP
+       APPEND AFTER PICK
     ========================= */
     if (residentPicker) {
         document.body.appendChild(residentPicker);

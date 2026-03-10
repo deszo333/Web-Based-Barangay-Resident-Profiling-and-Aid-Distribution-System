@@ -71,10 +71,12 @@ if (isset($_SESSION['role'])) {
 
             <!-- SCAN CARD -->
             <div class="scan-card">
-    <div class="scan-icon-wrapper">
+    <div class="scan-icon-wrapper" id="scan_trigger">
         <i class="fa-solid fa-id-card scan-icon"></i>
     </div>
-    <h3>Waiting for Scan</h3>
+    <h3 id="scan_status">Waiting for Scan</h3>
+     <!-- temp textbox to put the scanned rfid uid -->
+    <input type="hidden" id="hidden_rfid_input" name="scanned_rfid">
 </div>
 
             <!-- MANUAL ENTRY -->
@@ -107,14 +109,60 @@ if (isset($_SESSION['role'])) {
 
 <!-- Custom Popup -->
 <link rel="stylesheet" href="assets/popup/popup.css">
-
 <div id="popup-container"></div>
+
+
 
 <script>
 fetch("assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
+    });
+</script>
+
+
+
+<script src="rfid/rfid_scanner.js"> //load the fuckening js before the script</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const scanBtn = document.getElementById("scan_trigger");
+    const rfidInput = document.getElementById("hidden_rfid_input");
+
+
+    if (scanBtn) {
+        scanBtn.addEventListener("click", () => {
+
+
+            if (typeof rfidPort !== "undefined" && rfidPort) 
+            {
+                console.log("already connected blocked the click")
+                return;
+            }
+            
+            
+            console.log("Distributing to household rfid: ");
+            connectRFIDScanner(assignRFIDToInput, scanBtn);
+
+        });
+
+        
+    }
+
+    // uid is console logged
+    function assignRFIDToInput(scannedID) {
+        console.log("Distributing to household rfid: ", scannedID);
+        
+        // uid to input box (invisible)
+        if (rfidInput) {
+            rfidInput.value = scannedID;
+        }
+        
+        
+    }
+        
     });
 </script>
 

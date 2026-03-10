@@ -215,3 +215,8 @@ body {
     margin-bottom: 8px;
     font-size: 14px;
 }
+
+.scan-icon-wrapper {
+    cursor: pointer;
+}
+

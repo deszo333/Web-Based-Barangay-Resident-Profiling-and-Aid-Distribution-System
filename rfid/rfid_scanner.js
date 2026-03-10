@@ -14,12 +14,13 @@ async function connectRFIDScanner(onScanCallback, buttonElement = null) {
 
         await rfidPort.open({ baudRate: 9600 });
         console.log("RFID Scanner Connected!");
-        
-        if (buttonElement) {
-            buttonElement.innerHTML = '<i class="fa-solid fa-check"></i> Scanner Active';
-            buttonElement.style.backgroundColor = "#28a745"; 
-            buttonElement.style.color = "white";
+        if (buttonElement){
+            buttonElement.disabled = true;
         }
+
+        
+        
+
         
         readRFIDLoop(onScanCallback);
         

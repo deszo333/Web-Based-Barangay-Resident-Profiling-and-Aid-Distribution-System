@@ -50,7 +50,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <p class="sidebar-section-title">Report</p>
         <ul class="sidebar-menu">
             <li>
-                <a href="reports-logs.html" class="<?= ($currentPage == 'reports-logs.html') ? 'active' : '' ?>">
+                <a href="reports-logs.php" class="<?= ($currentPage == 'reports-logs.php') ? 'active' : '' ?>">
                     <i class="fa-solid fa-file-lines"></i> <span>Reports & Logs</span>
                 </a>
             </li>

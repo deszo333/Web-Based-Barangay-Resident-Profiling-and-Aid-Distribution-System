@@ -34,26 +34,38 @@
             success: '<i class="fa-solid fa-circle-check"></i>'
         };
 
-        icon.innerHTML = icons[type] || '<i class="fa-solid fa-circle-info"></i>';
+        icon.innerHTML = icons[type] || icons.info;
         icon.className = `popup-icon ${type}`;
 
         const okBtn = document.createElement("button");
         okBtn.textContent = "OK";
         okBtn.className = "btn-primary";
         okBtn.onclick = () => {
-            onOk?.();
+            if (onOk) onOk();
             close();
         };
 
         actions.appendChild(okBtn);
 
-        overlay.classList.add("show");
-        box.classList.add("show");
+        /* SHOW popup */
+        overlay.style.display = "block";
+        box.style.display = "block";
+
+        setTimeout(() => {
+            overlay.classList.add("show");
+            box.classList.add("show");
+        }, 10);
     }
 
     function close() {
+
         overlay.classList.remove("show");
         box.classList.remove("show");
+
+        setTimeout(() => {
+            overlay.style.display = "none";
+            box.style.display = "none";
+        }, 300);
     }
 
     window.Popup = { open, close };

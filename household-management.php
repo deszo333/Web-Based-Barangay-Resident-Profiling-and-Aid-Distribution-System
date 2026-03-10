@@ -57,9 +57,11 @@ if (isset($_SESSION['role'])) {
             </div>
 
             <div class="rp-actions">
-                <form method="GET" style="display:inline;"> 
-                    <input type="text" name="search" placeholder="Search households..." value="<?php echo $_GET['search'] ?? ''; ?>"> 
-                </form>
+                <input 
+                type="text" 
+                id="searchHousehold"
+                placeholder="Search households..."
+            >
                 <button class="add-household">
                     <i class="fa-solid fa-plus"></i> Add Household
                 </button>
@@ -79,7 +81,7 @@ if (isset($_SESSION['role'])) {
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="householdTableBody">
         <?php
         // Connect to database
         $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");

@@ -32,6 +32,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const rfidInput = document.getElementById("rfidInput");
 
     /* =========================
+   AJAX HOUSEHOLD SEARCH
+========================= */
+
+const searchInput = document.getElementById("searchHousehold");
+const tableBody = document.getElementById("householdTableBody");
+
+if (searchInput) {
+
+    searchInput.addEventListener("input", function () {
+
+        const searchValue = this.value;
+
+        fetch("search_household.php?search=" + encodeURIComponent(searchValue))
+        .then(response => response.text())
+        .then(data => {
+            tableBody.innerHTML = data;
+        })
+        .catch(error => console.error("Search error:", error));
+
+    });
+
+}
+
+    /* =========================
        ESCAPE CSS TRANSFORM TRAP
     ========================= */
     if (residentPicker) {

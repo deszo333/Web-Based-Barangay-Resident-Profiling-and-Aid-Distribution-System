@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /* =========================
        DOM ELEMENTS
     ========================= */
-    const addBtn = document.querySelector('.add-household');
+    const addBtn = document.querySelector('.add-resident');
     const modal = document.getElementById('residentModal');
     const overlay = document.getElementById('modalOverlay');
     const closeBtn = document.getElementById('closeModal');
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modalTitle = document.getElementById("modalTitle");
     const modalIcon = document.getElementById("modalIcon");
-    const saveBtn = document.getElementById("saveHouseholdBtn");
+    const saveBtn = form.querySelector("button[type='submit']");
 
     const membersOverlay = document.getElementById("membersOverlay");
     const membersBody = document.getElementById("membersBody");
@@ -31,6 +31,61 @@ document.addEventListener("DOMContentLoaded", () => {
     const rfidOverlay = document.getElementById("rfidOverlay");
     const cancelRfid = document.getElementById("cancelRfid");
     const rfidInput = document.getElementById("rfidInput");
+
+        /* =========================
+    AUTO CALCULATE AGE
+    ========================= */
+    const birthdateInput = document.querySelector("input[name='birthdate']");
+    const ageInput = document.querySelector("input[name='age']");
+
+    if (birthdateInput && ageInput) {
+        birthdateInput.addEventListener("change", function () {
+
+            const birthDate = new Date(this.value);
+            const today = new Date();
+
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            ageInput.value = age;
+        });
+    }
+
+    /* =========================
+   AJAX SEARCH
+========================= */
+
+const searchInput = document.getElementById("searchInput");
+const tableBody = document.getElementById("residentTableBody");
+
+if (searchInput) {
+
+    searchInput.addEventListener("keyup", function () {
+
+        const searchValue = this.value;
+
+        fetch("search_resident.php?search=" + encodeURIComponent(searchValue))
+        .then(response => response.text())
+        .then(data => {
+
+            tableBody.innerHTML = data;
+
+            if (data.trim() === "") {
+                document.getElementById("noResultRow").style.display = "";
+            } else {
+                document.getElementById("noResultRow").style.display = "none";
+            }
+
+        })
+        .catch(error => console.error("Search error:", error));
+
+    });
+
+}
 
     /* =========================
        ESCAPE CSS TRANSFORM TRAP
@@ -254,53 +309,92 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* =========================
-       MAIN FORM BUTTONS (Add Household)
-    ========================= */
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            if (form) form.reset();
-            if (householdId) householdId.value = "";
-            if (membersInput) membersInput.value = ""; 
-            renderMembersTable(); 
+   MAIN FORM BUTTONS (ADD RESIDENT)
+========================= */
+if (addBtn) {
+    addBtn.addEventListener('click', () => {
 
-            if (saveBtn) saveBtn.innerText = "Save Household";
-            if (modalTitle) modalTitle.innerText = "Add New Household";
-            if (modalIcon) modalIcon.className = "fa-solid fa-house";
+        if (form) form.reset();
 
-            fetch('get_next_household_number.php')
-                .then(res => res.text())
-                .then(num => { if(form.household_number) form.household_number.value = num; })
-                .catch(err => console.error(err));
+        const residentId = document.getElementById("resident_id");
+        if (residentId) residentId.value = "";
 
-            openModal();
-        });
-    }
+        if (saveBtn) saveBtn.innerText = "Save Resident";
+        if (modalTitle) modalTitle.innerText = "Add New Resident";
+        if (modalIcon) modalIcon.className = "fa-solid fa-user-plus";
 
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (overlay) overlay.addEventListener('click', closeModal);
+        openModal();
+    });
+}
+
+if (closeBtn) closeBtn.addEventListener('click', closeModal);
+if (overlay) overlay.addEventListener('click', closeModal);
 
     /* =========================
-       FORM SUBMISSION
-    ========================= */
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            
-            fetch('add_household.php', {
-                method: 'POST',
-                body: new FormData(form)
-            })
-            .then(res => res.text())
-            .then(data => {
-                if (data.trim() === 'success') {
-                    location.reload();
-                } else {
-                    alert("Failed to save: " + data);
-                }
-            })
-            .catch(err => alert("Error: " + err));
+   FORM SUBMISSION
+========================= */
+if (form) {
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const residentId = document.getElementById("resident_id").value;
+
+        const isUpdate = residentId !== "";
+
+        const url = isUpdate ? "update_resident.php" : "add_resident.php";
+
+        Popup.open({
+            title: isUpdate ? "Update Resident" : "Add Resident",
+            message: isUpdate
+                ? "Are you sure you want to update this resident?"
+                : "Are you sure you want to add this resident?",
+            type: "warning",
+
+            onOk: () => {
+
+                fetch(url, {
+                    method: 'POST',
+                    body: new FormData(form)
+                })
+                .then(res => res.text())
+                .then(data => {
+
+                    if (data.trim() === 'success') {
+
+                        Popup.open({
+                            title: "Success",
+                            message: isUpdate
+                                ? "Resident updated successfully."
+                                : "Resident added successfully.",
+                            type: "success",
+                            onOk: () => location.reload()
+                        });
+
+                    } else {
+
+                        Popup.open({
+                            title: "Save Failed",
+                            message: data,
+                            type: "danger"
+                        });
+
+                    }
+
+                })
+                .catch(err => {
+
+                    Popup.open({
+                        title: "Server Error",
+                        message: err,
+                        type: "danger"
+                    });
+
+                });
+
+            }
         });
-    }
+    });
+}
 
     /* =========================
        RFID SCANNER
@@ -338,51 +432,96 @@ document.addEventListener("DOMContentLoaded", () => {
     ========================= */
     document.addEventListener("click", (e) => {
 
-        const editBtn = e.target.closest(".edit");
-        if (editBtn) {
-            e.preventDefault();
-            
-            if (form) form.reset();
-            if (householdId) householdId.value = editBtn.dataset.id;
-            if (form.household_number) form.household_number.value = editBtn.dataset.number;
-            if (headInput) headInput.value = editBtn.dataset.head;
-            if (addressInput) addressInput.value = editBtn.dataset.address;
-            if (rfidInput) rfidInput.value = editBtn.dataset.rfid;
-            
-            if (membersInput) {
-                membersInput.value = editBtn.dataset.members;
-                renderMembersTable();
-            }
+    const editBtn = e.target.closest(".edit");
+    if (editBtn) {
+        e.preventDefault();
 
-            if (saveBtn) saveBtn.innerText = "Update Household";
-            if (modalTitle) modalTitle.innerText = "Edit Household";
-            if (modalIcon) modalIcon.className = "fa-solid fa-pen-to-square";
+        if (form) form.reset();
 
-            openModal();
-        }
+        // Set ID
+        const residentId = document.getElementById("resident_id");
+        if (residentId) residentId.value = editBtn.dataset.id;
+
+        // Fill form fields
+        if (form.first_name) form.first_name.value = editBtn.dataset.first;
+        if (form.middle_name) form.middle_name.value = editBtn.dataset.middle;
+        if (form.last_name) form.last_name.value = editBtn.dataset.last;
+        if (form.address) form.address.value = editBtn.dataset.address;
+        if (form.birthdate) form.birthdate.value = editBtn.dataset.birthdate;
+        if (form.age) form.age.value = editBtn.dataset.age;
+        if (form.gender) form.gender.value = editBtn.dataset.gender;
+        if (form.civil_status) form.civil_status.value = editBtn.dataset.civil;
+        if (form.occupation) form.occupation.value = editBtn.dataset.occupation;
+        if (form.voters_registration_no) form.voters_registration_no.value = editBtn.dataset.voters;
+        if (form.contact) form.contact.value = editBtn.dataset.contact;
+
+        // Update modal text
+        if (modalTitle) modalTitle.innerText = "Edit Resident";
+        if (modalIcon) modalIcon.className = "fa-solid fa-user-pen";
+
+        // Open modal
+        openModal();
+    }
 
         const deleteBtn = e.target.closest(".delete");
-        if (deleteBtn) {
-            e.preventDefault();
-            const id = deleteBtn.dataset.id;
-            
-            if (confirm("Are you sure you want to delete this household?")) {
-                fetch('delete_household.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `id=${encodeURIComponent(id)}`
-                })
-                .then(res => res.text())
-                .then(data => {
-                    if (data.trim() === 'success') {
-                        deleteBtn.closest('tr').remove();
-                    } else {
-                        alert("Failed to delete: " + data);
-                    }
-                })
-                .catch(err => alert("Server error: " + err));
-            }
+
+if (deleteBtn) {
+
+    e.preventDefault();
+
+    const id = deleteBtn.dataset.id;
+
+    Popup.open({
+        title: "Delete Resident",
+        message: "Are you sure you want to delete this resident?",
+        type: "warning",
+
+        onOk: () => {
+
+            fetch('delete_resident.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `id=${encodeURIComponent(id)}`
+            })
+            .then(res => res.text())
+            .then(data => {
+
+                if (data.trim() === 'success') {
+
+                    deleteBtn.closest('tr').remove();
+
+                    Popup.open({
+                        title: "Deleted",
+                        message: "Resident deleted successfully.",
+                        type: "success"
+                    });
+
+                } else {
+
+                    Popup.open({
+                        title: "Delete Failed",
+                        message: data,
+                        type: "danger"
+                    });
+
+                }
+
+            })
+            .catch(err => {
+
+                Popup.open({
+                    title: "Server Error",
+                    message: err,
+                    type: "danger"
+                });
+
+            });
+
         }
+    });
+}
 
         const pickerBtn = e.target.closest(".picker-action");
         if (pickerBtn) {

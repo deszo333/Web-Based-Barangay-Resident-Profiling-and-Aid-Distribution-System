@@ -61,7 +61,7 @@ mysqli_close($conn);
     <div class="sidebar-section">
         <p class="sidebar-section-title">Report</p>
         <ul class="sidebar-menu">
-            <li><a href="reports-logs.html"><i class="fa-solid fa-file-lines"></i> <span>Reports & Logs</span></a></li>
+            <li><a href="reports-logs.php"><i class="fa-solid fa-file-lines"></i> <span>Reports & Logs</span></a></li>
         </ul>
     </div>
 
@@ -189,7 +189,7 @@ mysqli_close($conn);
         </div>
     </a>
 
-    <a href="reports-logs.html" class="actions-card-6">
+    <a href="reports-logs.php" class="actions-card-6">
         <div class="card-content">
             <span class="card-icon"><i class="fas fa-file-alt"></i></span>
             <div class="card-text">
@@ -233,11 +233,16 @@ fetch("assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
+
+        // Load popup.js AFTER the HTML exists
+        const script = document.createElement("script");
+        script.src = "assets/popup/popup.js";
+        document.body.appendChild(script);
     });
 </script>
 
-<script src="assets/popup/popup.js" defer></script>
 
+<script src="assets/js/resident-profilingss.js"></script>
 <script src="assets/js/admins-dashboard.js"></script>
 
 

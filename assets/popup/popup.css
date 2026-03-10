@@ -4,6 +4,7 @@
     background: rgba(0,0,0,0.45);
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;   /* ADD */
     transition: opacity 0.3s ease;
     z-index: 999;
 }
@@ -11,6 +12,7 @@
 .popup-overlay.show {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;  /* ADD */
 }
 
 .popup {

@@ -281,9 +281,30 @@ input[type="date"] {
     z-index: 1100;
 }
 
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 12px;
+    margin-bottom: 15px;
+}
+
 .modal-title {
-    margin-bottom: 20px;
-    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-title i {
+    font-size: 30px;
+    color: #144876;
+}
+
+.modal-title h3 {
+    font-size: 26px;
+    font-weight: 700;
+    padding: 10px;
 }
 
 .resident-modal-content label {

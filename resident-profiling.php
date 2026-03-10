@@ -253,8 +253,14 @@ if (isset($_SESSION['role'])) {
 <!-- Add/Edit Resident Modal -->
 <div class="resident-modal" id="residentModal">
     <div class="resident-modal-content">
-        <span class="close-btn" id="closeModal">&times;</span>
-        <h3 class="modal-title">Add / Edit Resident</h3>
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fa-solid fa-house" id="modalIcon"></i>
+                <h3 id="modalTitle">Add New Household</h3>
+            </div>
+            <span class="close-btn" id="closeModal">&times;</span>
+        </div>
+        
         <form id="addResidentForm" class="resident-form-grid">
             <input type="hidden" name="resident_id" id="resident_id">
 

@@ -111,7 +111,7 @@ if (isset($_SESSION['role'])) {
                 if ($dateScheduled == $today) {
                     $btnText = "Start Distribution";
                     $btnClass = "btn-start";
-                    $btnLink = "start-distribution.php?id={$row['id']}";
+                    $btnLink = "start-distribution.php?program_id={$row['id']}";
                 } elseif ($dateScheduled < $today) {
                     $btnText = "Complete";
                     $btnClass = "btn-complete";

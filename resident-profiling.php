@@ -1,7 +1,7 @@
 <?php
-session_start();
+require 'auth_check.php';
 
-$backLink = "login.php"; // default fallback
+$backLink = "login.php"; // default fallback if no login session
 if (isset($_SESSION['role'])) {
     if ($_SESSION['role'] === 'admin') {
         $backLink = "admin-dashboard.php";
@@ -151,6 +151,7 @@ if (isset($_SESSION['role'])) {
                         : htmlspecialchars($row['contact']);
 
                     // Custom tooltip for age
+                    // start occ algorithm line 182 ayaw mag comment ptngana === data-version='{$row['version']}'
                     $birthdate = htmlspecialchars($row['birthdate']);
                     $age = htmlspecialchars($row['age']);
                     $birthdateTooltip = "<span class='birthdate-tooltip' data-age='Age: $age'>$birthdate</span>";
@@ -177,7 +178,8 @@ if (isset($_SESSION['role'])) {
                                 data-civil='{$row['civil_status']}'
                                 data-occupation='{$row['occupation']}'
                                 data-voters='{$row['voters_registration_no']}'
-                                data-contact='{$row['contact']}'>
+                                data-contact='{$row['contact']}'
+                                data-version='{$row['version']}'> 
                                 <i class='fa-solid fa-pen-to-square'></i>
                             </button>
                             <button class='delete' data-id='{$row['id']}'>
@@ -263,6 +265,8 @@ if (isset($_SESSION['role'])) {
         
         <form id="addResidentForm" class="resident-form-grid">
             <input type="hidden" name="resident_id" id="resident_id">
+            <!-- store the current version after writing to database -->
+            <input type="hidden" name="version" id="resident_version">
 
             <!-- ROW 1 -->
             <div class="form-row three">

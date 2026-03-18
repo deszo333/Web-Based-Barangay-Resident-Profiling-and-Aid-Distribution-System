@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth_check.php';
 
 $backLink = "login.php"; // default fallback
 if (isset($_SESSION['role'])) {

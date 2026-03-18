@@ -1,7 +1,7 @@
 <?php
-session_start();
+require 'auth_check.php';
 
-$backLink = "login.php"; // default fallback
+$backLink = "login.php"; // default fallback if no login session
 if (isset($_SESSION['role'])) {
     if ($_SESSION['role'] === 'admin') {
         $backLink = "admin-dashboard.php";

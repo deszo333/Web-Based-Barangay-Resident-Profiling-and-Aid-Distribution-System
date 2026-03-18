@@ -47,25 +47,17 @@
 
         actions.appendChild(okBtn);
 
-        /* SHOW popup */
-        overlay.style.display = "block";
-        box.style.display = "block";
-
-        setTimeout(() => {
-            overlay.classList.add("show");
-            box.classList.add("show");
-        }, 10);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                overlay.classList.add("show");
+                box.classList.add("show");
+            });
+        });
     }
 
     function close() {
-
         overlay.classList.remove("show");
         box.classList.remove("show");
-
-        setTimeout(() => {
-            overlay.style.display = "none";
-            box.style.display = "none";
-        }, 300);
     }
 
     window.Popup = { open, close };

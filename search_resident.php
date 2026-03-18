@@ -35,17 +35,34 @@ while ($row = mysqli_fetch_assoc($result)) {
         ? "<span class='not-registered'>N/A</span>"
         : htmlspecialchars($row['contact']);
 
+    $birthdate = htmlspecialchars($row['birthdate']);
+    $age = htmlspecialchars($row['age']);
+    $birthdateTooltip = "<span class='birthdate-tooltip' data-age='Age: $age'>$birthdate</span>";
+
     echo "<tr>
         <td>{$row['first_name']} {$row['middle_name']} {$row['last_name']}</td>
         <td>{$row['address']}</td>
-        <td>{$row['birthdate']}</td>
+        <td>$birthdateTooltip</td>
         <td>{$row['gender']}</td>
         <td>{$row['civil_status']}</td>
         <td>{$row['occupation']}</td>
         <td>$voterDisplay</td>
         <td>$contactDisplay</td>
         <td>
-            <button class='edit' data-id='{$row['id']}'>
+            <button class='edit'
+                data-id='{$row['id']}'
+                data-first='{$row['first_name']}'
+                data-middle='{$row['middle_name']}'
+                data-last='{$row['last_name']}'
+                data-address='{$row['address']}'
+                data-birthdate='{$row['birthdate']}'
+                data-age='{$row['age']}'
+                data-gender='{$row['gender']}'
+                data-civil='{$row['civil_status']}'
+                data-occupation='{$row['occupation']}'
+                data-voters='{$row['voters_registration_no']}'
+                data-contact='{$row['contact']}'
+                data-version='{$row['version']}'>
                 <i class='fa-solid fa-pen-to-square'></i>
             </button>
             <button class='delete' data-id='{$row['id']}'>

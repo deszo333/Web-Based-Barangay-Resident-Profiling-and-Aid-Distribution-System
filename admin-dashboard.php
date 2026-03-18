@@ -1,10 +1,11 @@
 <?php
-session_start();
+require 'auth_check.php';
 
 // Connect to DB
 $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+    error_log("Database connection failed: " . mysqli_connect_error());
+    die("error");
 }
 
 // Get total residents

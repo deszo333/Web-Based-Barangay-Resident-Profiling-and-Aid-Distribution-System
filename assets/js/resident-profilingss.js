@@ -352,14 +352,61 @@ if (form) {
 
             onOk: () => {
 
+                if (isUpdate) {
+                    const versionVal = document.getElementById("resident_version").value;
+                    if (!versionVal || versionVal === "") {
+                        Popup.open({
+                            title: "Error",
+                            message: "Version missing. Please close and reopen the record.",
+                            type: "danger"
+                        });
+                        return;
+                    }
+                }
+
                 fetch(url, {
                     method: 'POST',
                     body: new FormData(form)
                 })
                 .then(res => res.text())
                 .then(data => {
+                    console.log("RAW SERVER RESPONSE:", JSON.stringify(data));
+                    console.log("TRIMMED:", data.trim());
 
-                    if (data.trim() === 'success') {
+                    let response = data.trim();
+                    let debugInfo = null;
+
+                    if (response.includes("|")) {
+                        const parts = response.split("|");
+                        response = parts[0];
+                        try {
+                            debugInfo = JSON.parse(parts[1]);
+                            console.log("OCC DEBUG INFO:", debugInfo);
+                        } catch (e) {
+                            console.log("Could not parse debug JSON");
+                        }
+                    }
+
+                    if (response === 'success') {
+
+                        // Immediately bump the version in the edit button's data attribute
+                        if (isUpdate) {
+                            const residentId = document.getElementById("resident_id").value;
+                            const editBtn = document.querySelector(`.edit[data-id='${residentId}']`);
+                            if (editBtn) {
+                                const currentVersion = parseInt(editBtn.dataset.version || "1");
+                                editBtn.dataset.version = currentVersion + 1;
+                            }
+
+                            // Also update the hidden version input so the form itself is current
+                            const versionInput = document.getElementById("resident_version");
+                            if (versionInput) {
+                                versionInput.value = parseInt(versionInput.value || "1") + 1;
+                            }
+                        }
+
+                        // Close the edit modal immediately before showing success
+                        closeModal();
 
                         Popup.open({
                             title: "Success",
@@ -369,8 +416,17 @@ if (form) {
                             type: "success",
                             onOk: () => location.reload()
                         });
-
-                    } else {
+                    } 
+                    // === START OCC ALGORITHM: HANDLE CONFLICT RESPONSE ===
+                    else if (response === 'conflict') {
+                        Popup.open({
+                            title: "Update Conflict",
+                            message: "Data changed! Another staff member updated this record while you were viewing it. Please refresh the page and try again.",
+                            type: "danger"
+                        });
+                    }
+                    // === END OCC ALGORITHM ===
+                    else {
 
                         Popup.open({
                             title: "Save Failed",
@@ -454,6 +510,10 @@ if (form) {
         if (form.occupation) form.occupation.value = editBtn.dataset.occupation;
         if (form.voters_registration_no) form.voters_registration_no.value = editBtn.dataset.voters;
         if (form.contact) form.contact.value = editBtn.dataset.contact;
+
+
+        // occ map the version to form
+        if (form.version) form.version.value = editBtn.dataset.version;
 
         // Update modal text
         if (modalTitle) modalTitle.innerText = "Edit Resident";

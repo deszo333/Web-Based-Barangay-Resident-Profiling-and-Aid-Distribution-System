@@ -1,10 +1,11 @@
 <?php
-session_start();
+require 'auth_check.php';
 
 // DB connection
 $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
 if(!$conn){
-    die("Connection failed: " . mysqli_connect_error());
+    error_log("Database connection failed: " . mysqli_connect_error());
+    die("error");
 }
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
@@ -85,7 +86,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if(mysqli_stmt_execute($stmt)){
         echo "success";
     } else {
-        echo "Error: " . mysqli_error($conn);
+        error_log("Add Household DB Error: " . mysqli_error($conn));
+        echo "error"; 
     }
 
     mysqli_stmt_close($stmt);

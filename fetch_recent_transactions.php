@@ -13,9 +13,10 @@ $transactions = [];
 
 if ($program_id > 0) {
     $stmt = $conn->prepare("
-        SELECT d.date_claimed, r.head_of_family 
+        SELECT d.date_claimed, CONCAT(head.first_name, ' ', head.last_name) AS head_of_family 
         FROM distribution_logs d
-        JOIN registered_household r ON d.household_number = r.household_number
+        JOIN registered_household r ON d.household_id = r.id
+        LEFT JOIN registered_resi head ON r.head_of_family_id = head.id
         WHERE d.program_id = ?
         ORDER BY d.date_claimed DESC
         LIMIT 5

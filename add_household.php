@@ -18,7 +18,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $address = trim($_POST['address'] ?? '');
     $household_member_ids = trim($_POST['household_member_ids'] ?? '');
     $rfid_raw = trim($_POST['rfid'] ?? '');
-The final code block should look like this:
 
     if($address === '' || $head_of_family_id === ''){
         echo "Please fill all required fields";
@@ -71,10 +70,10 @@ The final code block should look like this:
         }
 
         // HARDWARE RFID SYNC
-        if ($rfid !== null) {
-            mysqli_query($conn, "UPDATE rfid_tags SET status='Disabled' WHERE household_id = $household_id AND rfid_number != '$rfid'");
+        if ($rfid_raw !== '') {
+            mysqli_query($conn, "UPDATE rfid_tags SET status='Disabled' WHERE household_id = $household_id AND rfid_number != '$rfid_raw'");
             $rfid_stmt = mysqli_prepare($conn, "INSERT INTO rfid_tags (household_id, rfid_number, status) VALUES (?, ?, 'Active') ON DUPLICATE KEY UPDATE household_id=VALUES(household_id), status='Active'");
-            mysqli_stmt_bind_param($rfid_stmt, "is", $household_id, $rfid);
+            mysqli_stmt_bind_param($rfid_stmt, "is", $household_id, $rfid_raw);
             mysqli_stmt_execute($rfid_stmt);
         }
 

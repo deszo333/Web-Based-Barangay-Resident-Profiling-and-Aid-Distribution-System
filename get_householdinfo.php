@@ -17,24 +17,44 @@ if (empty($rfid_number)) {
     exit;
 }
 
-// rfid lokup
-$stmt = $conn->prepare("SELECT household_number, head_of_family, address, household_members FROM registered_household WHERE rfid = ?");
+// rfid lookup (Normalized DB)
+$stmt = $conn->prepare("
+    SELECT 
+        h.id AS household_id,
+        h.household_number, 
+        CONCAT(head.first_name, ' ', head.last_name) AS head_of_family, 
+        h.address 
+    FROM rfid_tags rt
+    JOIN registered_household h ON rt.household_id = h.id
+    LEFT JOIN registered_resi head ON h.head_of_family_id = head.id
+    WHERE rt.rfid_number = ? AND rt.status = 'Active'
+");
 $stmt->bind_param("s", $rfid_number);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-    echo json_encode(['status' => 'error', 'message' => 'walang tao']);
+    echo json_encode(['status' => 'error', 'message' => 'Unregistered or Disabled RFID card.']);
     exit;
 }
 
 $household = $result->fetch_assoc();
+$household_id = $household['household_id'];
+
+// Get household members as a comma-separated string
+$members_stmt = $conn->prepare("SELECT GROUP_CONCAT(CONCAT(first_name, ' ', last_name) SEPARATOR ', ') AS members FROM registered_resi WHERE household_id = ?");
+$members_stmt->bind_param("i", $household_id);
+$members_stmt->execute();
+$members_result = $members_stmt->get_result()->fetch_assoc();
+$household['household_members'] = $members_result['members'] ?? 'None';
+$members_stmt->close();
 
 // check if already claimed or not
 $claimed = false;
 if (!empty($program_id)) {
-    $check_stmt = $conn->prepare("SELECT id FROM distribution_logs WHERE program_id = ? AND household_number = ?");
-    $check_stmt->bind_param("is", $program_id, $household['household_number']);
+    // Check using household_id now
+    $check_stmt = $conn->prepare("SELECT id FROM distribution_logs WHERE program_id = ? AND household_id = ?");
+    $check_stmt->bind_param("ii", $program_id, $household_id);
     $check_stmt->execute();
     if ($check_stmt->get_result()->num_rows > 0) {
         $claimed = true;

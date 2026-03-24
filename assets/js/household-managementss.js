@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const householdId = document.getElementById('resident_id');
     const headInput = document.getElementById("headInput");
     const addressInput = document.querySelector("input[name='address']");
+    const headIdInput = document.getElementById("headIdInput");
+    const membersIdInput = document.getElementById("membersIdInput");
     
     const membersInput = document.getElementById("membersInput"); 
     const openMembersPickerBtn = document.getElementById("openMembersPickerBtn");
@@ -87,30 +89,28 @@ if (searchInput) {
     /* =========================
        MEMBER TABLE HELPERS (MAIN FORM)
     ========================= */
-    function removeMemberFromInput(name) {
-        if (!membersInput) return;
-        const current = membersInput.value.split(',').map(m => m.trim()).filter(m => m && m !== name);
-        membersInput.value = current.join(', ');
+    function removeMemberFromInput(idToRemove) {
+        tempSelectedMembers = tempSelectedMembers.filter(m => m.id !== idToRemove);
+        if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
+        if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
         renderMembersTable();
     }
 
     function renderMembersTable() {
-        if (!membersTableBody || !membersInput) return;
+        if (!membersTableBody) return;
         membersTableBody.innerHTML = "";
 
-        const members = membersInput.value.split(',').map(m => m.trim()).filter(Boolean);
-
-        if (members.length === 0) {
+        if (tempSelectedMembers.length === 0) {
             membersTableBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #94a3b8; font-style: italic;">No members added yet.</td></tr>`;
             return;
         }
 
-        members.forEach(name => {
+        tempSelectedMembers.forEach(member => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td>${name}</td>
+                <td>${member.name}</td>
                 <td style="text-align: center;">
-                    <button type="button" class="remove-member-btn" data-name="${name}">
+                    <button type="button" class="remove-member-btn" data-id="${member.id}">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </td>
@@ -166,14 +166,14 @@ if (searchInput) {
         // SMART SEARCH: Hides Head of Family dynamically during search
         document.getElementById("memberSearch")?.addEventListener("keyup", function () {
             const filter = this.value.toLowerCase();
-            const currentHead = (pickerMode === "members" && headInput) ? headInput.value.trim() : "";
+            const currentHeadId = (pickerMode === "members" && headIdInput) ? headIdInput.value.trim() : "";
 
             document.querySelectorAll("#residentPicker tbody tr").forEach(row => {
                 const btn = row.querySelector(".picker-action");
-                const rowName = btn ? btn.dataset.name.trim() : "";
+                const rowId = btn ? btn.dataset.id : "";
 
                 // Force hide if they are the head of family
-                if (pickerMode === "members" && rowName === currentHead && currentHead !== "") {
+                if (pickerMode === "members" && rowId === currentHeadId && currentHeadId !== "") {
                     row.style.display = "none";
                 } else {
                     row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
@@ -204,8 +204,8 @@ if (searchInput) {
             document.getElementById("pickerCount").innerText = tempSelectedMembers.length;
 
             document.querySelectorAll(".picker-action").forEach(btn => {
-                const name = btn.dataset.name.trim(); 
-                if (tempSelectedMembers.includes(name)) {
+                const id = btn.dataset.id; 
+                if (tempSelectedMembers.some(m => m.id === id)) {
                     btn.classList.add("selected-state");
                     btn.innerHTML = `<i class="fa-solid fa-check"></i> Selected`;
                 } else {
@@ -229,20 +229,22 @@ if (searchInput) {
         if (show) {
             residentPicker.classList.add("show");
             
-            if (pickerMode === "members" && membersInput) {
-                tempSelectedMembers = membersInput.value.split(',').map(m => m.trim()).filter(Boolean);
+            if (pickerMode === "members" && membersIdInput) {
+                const ids = (membersIdInput.value || "").split(',').filter(Boolean);
+                const names = (membersInput && membersInput.value || "").split(',').map(m => m.trim()).filter(Boolean);
+                tempSelectedMembers = ids.map((id, idx) => ({ id: id, name: names[idx] || '' }));
             }
 
             const searchInput = document.getElementById("memberSearch");
             if (searchInput) searchInput.value = "";
 
             // SMART FILTER: Hide the current Head of Family row instantly when opening members
-            const currentHead = (pickerMode === "members" && headInput) ? headInput.value.trim() : "";
+            const currentHeadId = (pickerMode === "members" && headIdInput) ? headIdInput.value.trim() : "";
             document.querySelectorAll("#residentPicker tbody tr").forEach(row => {
                 const btn = row.querySelector(".picker-action");
-                const rowName = btn ? btn.dataset.name.trim() : "";
+                const rowId = btn ? btn.dataset.id : "";
 
-                if (pickerMode === "members" && rowName === currentHead && currentHead !== "") {
+                if (pickerMode === "members" && rowId === currentHeadId && currentHeadId !== "") {
                     row.style.display = "none"; // Hide Head
                 } else {
                     row.style.display = ""; // Show everyone else
@@ -283,7 +285,10 @@ if (searchInput) {
         addBtn.addEventListener('click', () => {
             if (form) form.reset();
             if (householdId) householdId.value = "";
+            if (headIdInput) headIdInput.value = "";
+            if (membersIdInput) membersIdInput.value = "";
             if (membersInput) membersInput.value = ""; 
+            tempSelectedMembers = [];
             renderMembersTable(); 
 
             if (saveBtn) saveBtn.innerText = "Save Household";
@@ -387,24 +392,33 @@ if (searchInput) {
         const editBtn = e.target.closest(".edit");
         if (editBtn) {
             e.preventDefault();
-            
             if (form) form.reset();
+            
             if (householdId) householdId.value = editBtn.dataset.id;
             if (form.household_number) form.household_number.value = editBtn.dataset.number;
-            if (headInput) headInput.value = editBtn.dataset.head;
+            
+            if (headInput) headInput.value = editBtn.dataset.headname;
+            if (headIdInput) headIdInput.value = editBtn.dataset.headid;
             if (addressInput) addressInput.value = editBtn.dataset.address;
             if (rfidInput) rfidInput.value = editBtn.dataset.rfid;
             
-            if (membersInput) {
-                membersInput.value = editBtn.dataset.members;
-                renderMembersTable();
+            tempSelectedMembers = [];
+            const ids = (editBtn.dataset.memberids || "").split(",");
+            const names = (editBtn.dataset.membernames || "").split(",");
+            
+            for(let i = 0; i < ids.length; i++) {
+                if(ids[i]) tempSelectedMembers.push({ id: ids[i], name: names[i].trim() });
             }
+            
+            if (membersIdInput) membersIdInput.value = ids.join(',');
+            if (membersInput) membersInput.value = names.join(', ');
+            renderMembersTable();
 
             if (saveBtn) saveBtn.innerText = "Update Household";
             if (modalTitle) modalTitle.innerText = "Edit Household";
             if (modalIcon) modalIcon.className = "fa-solid fa-pen-to-square";
-
             openModal();
+            return;
         }
 
         const deleteBtn = e.target.closest(".delete");
@@ -452,45 +466,51 @@ if (searchInput) {
             e.preventDefault(); 
             e.stopPropagation(); 
             
-            const name = pickerBtn.dataset.name.trim(); 
+            const id = pickerBtn.dataset.id;
+            const name = pickerBtn.dataset.name.trim();
             const address = pickerBtn.dataset.address;
 
             if (pickerMode === "head") {
                 if (headInput) headInput.value = name;
+                if (headIdInput) headIdInput.value = id;
                 if (addressInput) addressInput.value = address;
                 
-                // If the new head was previously selected as a member, remove them!
-                if (membersInput) {
-                    let currentMembers = membersInput.value.split(',').map(m => m.trim()).filter(Boolean);
-                    if (currentMembers.includes(name)) {
-                        currentMembers = currentMembers.filter(m => m !== name);
-                        membersInput.value = currentMembers.join(', ');
-                        renderMembersTable();
-                    }
-                }
+                tempSelectedMembers = tempSelectedMembers.filter(m => m.id !== id);
+                if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
+                if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
+                renderMembersTable();
+                
                 togglePicker(false);
             } 
             else if (pickerMode === "members") {
-                if (tempSelectedMembers.includes(name)) {
-                    tempSelectedMembers = tempSelectedMembers.filter(m => m !== name);
+                const existingIndex = tempSelectedMembers.findIndex(m => m.id === id);
+                
+                if (existingIndex > -1) {
+                    tempSelectedMembers.splice(existingIndex, 1);
                     pickerBtn.classList.remove("selected-state");
                     pickerBtn.innerHTML = `Select`;
                 } else {
-                    tempSelectedMembers.push(name);
+                    tempSelectedMembers.push({ id: id, name: name });
                     pickerBtn.classList.add("selected-state");
                     pickerBtn.innerHTML = `<i class="fa-solid fa-check"></i> Selected`;
                 }
                 
+                // now it gets the actual id of the resident not string 
+                if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
+                if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
+                renderMembersTable();
+                
                 const countText = document.getElementById("pickerCount");
                 if (countText) countText.innerText = tempSelectedMembers.length;
             }
+            return;
         }
 
         const removeMemberBtn = e.target.closest(".remove-member-btn");
         if (removeMemberBtn) {
             e.preventDefault();
-            const name = removeMemberBtn.dataset.name;
-            removeMemberFromInput(name); 
+            const id = removeMemberBtn.dataset.id;
+            removeMemberFromInput(id); 
         }
 
         if (e.target.classList.contains("member-count")) {

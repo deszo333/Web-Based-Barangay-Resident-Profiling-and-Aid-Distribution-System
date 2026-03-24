@@ -1,7 +1,7 @@
 <?php
 require 'auth_check.php';
 
-$backLink = "login.php"; // default fallback
+$backLink = "login.php"; // default fallback if no login session
 if (isset($_SESSION['role'])) {
     if ($_SESSION['role'] === 'admin') {
         $backLink = "admin-dashboard.php";
@@ -99,13 +99,15 @@ if (isset($_SESSION['role'])) {
             $search_safe = mysqli_real_escape_string($conn, $search);
             $count_sql = "
                 SELECT COUNT(*) as total FROM registered_household
-                WHERE household_number LIKE '%$search_safe%'
-                OR head_of_family LIKE '%$search_safe%'
-                OR address LIKE '%$search_safe%'
-                OR household_members LIKE '%$search_safe%'
+                WHERE is_archived = 0 AND (
+                    household_number LIKE '%$search_safe%'
+                    OR head_of_family LIKE '%$search_safe%'
+                    OR address LIKE '%$search_safe%'
+                    OR household_members LIKE '%$search_safe%'
+                )
             ";
         } else {
-            $count_sql = "SELECT COUNT(*) as total FROM registered_household";
+            $count_sql = "SELECT COUNT(*) as total FROM registered_household WHERE is_archived = 0";
         }
 
         $count_result = mysqli_query($conn, $count_sql);
@@ -121,31 +123,39 @@ if (isset($_SESSION['role'])) {
         // Main SQL
         if (!empty($search)) {
             $sql = "
-                SELECT * FROM registered_household
-                WHERE household_number LIKE '%$search_safe%'
-                OR head_of_family LIKE '%$search_safe%'
-                OR address LIKE '%$search_safe%'
-                OR household_members LIKE '%$search_safe%'
-                ORDER BY id DESC
-                LIMIT $limit OFFSET $offset
+                SELECT h.id, h.household_number, h.address, h.head_of_family_id,
+                       CONCAT(head.first_name, ' ', head.last_name) AS head_name,
+                       rt.rfid_number AS rfid,
+                       GROUP_CONCAT(CONCAT(m.first_name, ' ', m.last_name) SEPARATOR ', ') AS members_list,
+                       GROUP_CONCAT(m.id SEPARATOR ',') AS members_ids
+                FROM registered_household h
+                LEFT JOIN registered_resi head ON h.head_of_family_id = head.id
+                LEFT JOIN registered_resi m ON m.household_id = h.id
+                LEFT JOIN rfid_tags rt ON rt.household_id = h.id AND rt.status = 'Active'
+                WHERE (h.household_number LIKE '%$search_safe%'
+                   OR CONCAT(head.first_name, ' ', head.last_name) LIKE '%$search_safe%'
+                   OR h.address LIKE '%$search_safe%')
+                   AND h.is_archived = 0
+                GROUP BY h.id ORDER BY h.id DESC LIMIT $limit OFFSET $offset
             ";
         } else {
-            $sql = "SELECT * FROM registered_household ORDER BY id DESC LIMIT $limit OFFSET $offset";
+            $sql = "SELECT h.id, h.household_number, h.address, h.head_of_family_id, CONCAT(head.first_name, ' ', head.last_name) AS head_name, rt.rfid_number AS rfid, GROUP_CONCAT(CONCAT(m.first_name, ' ', m.last_name) SEPARATOR ', ') AS members_list, GROUP_CONCAT(m.id SEPARATOR ',') AS members_ids FROM registered_household h LEFT JOIN registered_resi head ON h.head_of_family_id = head.id LEFT JOIN registered_resi m ON m.household_id = h.id LEFT JOIN rfid_tags rt ON rt.household_id = h.id AND rt.status = 'Active' WHERE h.is_archived = 0 GROUP BY h.id ORDER BY h.id DESC LIMIT $limit OFFSET $offset";
         }
 
         $result = mysqli_query($conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
             while ($row = mysqli_fetch_assoc($result)) {
-                $membersArray = array_filter(array_map('trim', explode(',', $row['household_members'])));
+                $membersArray = empty($row['members_list']) ? [] : explode(', ', $row['members_list']);
                 $membersCount = count($membersArray);
-                $membersData = htmlspecialchars($row['household_members'], ENT_QUOTES);
+                $membersData = htmlspecialchars($row['members_list'], ENT_QUOTES);
+                $memberIds = htmlspecialchars($row['members_ids'], ENT_QUOTES);
                 $displayMembers = $membersCount . " members";
 
                 echo "
                 <tr>
                     <td>{$row['household_number']}</td>
-                    <td>{$row['head_of_family']}</td>
+                    <td>{$row['head_name']}</td>
                     <td>{$row['address']}</td>
                     <td><span class='member-count' data-members='{$membersData}'>{$displayMembers}</span></td>
                     <td>{$row['rfid']}</td>
@@ -153,9 +163,11 @@ if (isset($_SESSION['role'])) {
                         <button class='edit'
                             data-id='{$row['id']}'
                             data-number='{$row['household_number']}'
-                            data-head='{$row['head_of_family']}'
+                            data-headid='{$row['head_of_family_id']}'
+                            data-headname='{$row['head_name']}'
                             data-address='{$row['address']}'
-                            data-members='{$membersData}'
+                            data-memberids='{$memberIds}'
+                            data-membernames='{$membersData}'
                             data-rfid='{$row['rfid']}'>
                             <i class='fa-solid fa-pen-to-square'></i>
                         </button>
@@ -231,6 +243,9 @@ if (isset($_SESSION['role'])) {
         
 <form id="addResidentForm">
     <input type="hidden" id="resident_id" name="resident_id">
+    
+    <input type="hidden" id="headIdInput" name="head_of_family_id">
+    <input type="hidden" id="membersIdInput" name="household_member_ids">
 
     <!-- ROW 1 -->
     <div class="form-row two-col">
@@ -266,8 +281,8 @@ if (isset($_SESSION['role'])) {
                 <?php
                 $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
                 $res = mysqli_query($conn, "
-                    SELECT first_name, middle_name, last_name, address
-                    FROM registered_resi
+                    SELECT id, first_name, middle_name, last_name, address
+                    FROM registered_resi WHERE is_archived = 0
                     ORDER BY last_name
                 ");
 
@@ -286,6 +301,7 @@ if (isset($_SESSION['role'])) {
                         <td>
                             <button type='button'
                                 class='picker-action'
+                                data-id=\"{$r['id']}\"
                                 data-name=\"{$fullName}\"
                                 data-address=\"{$address}\">
                                 Select
@@ -316,7 +332,7 @@ if (isset($_SESSION['role'])) {
             </button>
         </div>
         
-        <input type="hidden" name="household_members" id="membersInput">
+        <input type="hidden" id="membersInput">
 
         <div class="members-table-container">
             <table class="inner-members-table">

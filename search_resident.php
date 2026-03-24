@@ -3,12 +3,11 @@ $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
 
 $search = $_GET['search'] ?? '';
 
-$sql = "SELECT * FROM registered_resi";
+$sql = "SELECT * FROM registered_resi WHERE is_archived = 0";
 
 if ($search !== '') {
     $search_safe = mysqli_real_escape_string($conn, $search);
-
-    $sql .= " WHERE 
+    $sql .= " AND (
         first_name LIKE '%$search_safe%' OR
         middle_name LIKE '%$search_safe%' OR
         last_name LIKE '%$search_safe%' OR
@@ -18,7 +17,8 @@ if ($search !== '') {
         civil_status LIKE '%$search_safe%' OR
         occupation LIKE '%$search_safe%' OR
         voters_registration_no LIKE '%$search_safe%' OR
-        contact LIKE '%$search_safe%'";
+        contact LIKE '%$search_safe%'
+    )";
 }
 
 $sql .= " ORDER BY id DESC";

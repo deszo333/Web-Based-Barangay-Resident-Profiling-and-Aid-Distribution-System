@@ -98,19 +98,21 @@ if (isset($_SESSION['role'])) {
                     $search_safe = mysqli_real_escape_string($conn, $search);
                     $count_sql = "
                         SELECT COUNT(*) as total FROM registered_resi
-                        WHERE first_name LIKE '%$search_safe%'
-                        OR middle_name LIKE '%$search_safe%'
-                        OR last_name LIKE '%$search_safe%'
-                        OR address LIKE '%$search_safe%'
-                        OR birthdate LIKE '%$search_safe%'
-                        OR gender LIKE '%$search_safe%'
-                        OR civil_status LIKE '%$search_safe%'
-                        OR occupation LIKE '%$search_safe%'
-                        OR voters_registration_no LIKE '%$search_safe%'
-                        OR contact LIKE '%$search_safe%'
+                        WHERE is_archived = 0 AND (
+                            first_name LIKE '%$search_safe%'
+                            OR middle_name LIKE '%$search_safe%'
+                            OR last_name LIKE '%$search_safe%'
+                            OR address LIKE '%$search_safe%'
+                            OR birthdate LIKE '%$search_safe%'
+                            OR gender LIKE '%$search_safe%'
+                            OR civil_status LIKE '%$search_safe%'
+                            OR occupation LIKE '%$search_safe%'
+                            OR voters_registration_no LIKE '%$search_safe%'
+                            OR contact LIKE '%$search_safe%'
+                        )
                     ";
                 } else {
-                    $count_sql = "SELECT COUNT(*) as total FROM registered_resi";
+                    $count_sql = "SELECT COUNT(*) as total FROM registered_resi WHERE is_archived = 0";
                 }
                 $count_result = mysqli_query($conn, $count_sql);
                 $total_records = mysqli_fetch_assoc($count_result)['total'];
@@ -120,21 +122,23 @@ if (isset($_SESSION['role'])) {
                 if ($search !== '') {
                     $sql = "
                         SELECT * FROM registered_resi
-                        WHERE first_name LIKE '%$search_safe%'
-                        OR middle_name LIKE '%$search_safe%'
-                        OR last_name LIKE '%$search_safe%'
-                        OR address LIKE '%$search_safe%'
-                        OR birthdate LIKE '%$search_safe%'
-                        OR gender LIKE '%$search_safe%'
-                        OR civil_status LIKE '%$search_safe%'
-                        OR occupation LIKE '%$search_safe%'
-                        OR voters_registration_no LIKE '%$search_safe%'
-                        OR contact LIKE '%$search_safe%'
+                        WHERE is_archived = 0 AND (
+                            first_name LIKE '%$search_safe%'
+                            OR middle_name LIKE '%$search_safe%'
+                            OR last_name LIKE '%$search_safe%'
+                            OR address LIKE '%$search_safe%'
+                            OR birthdate LIKE '%$search_safe%'
+                            OR gender LIKE '%$search_safe%'
+                            OR civil_status LIKE '%$search_safe%'
+                            OR occupation LIKE '%$search_safe%'
+                            OR voters_registration_no LIKE '%$search_safe%'
+                            OR contact LIKE '%$search_safe%'
+                        )
                         ORDER BY id DESC
                         LIMIT $limit OFFSET $offset
                     ";
                 } else {
-                    $sql = "SELECT * FROM registered_resi ORDER BY id DESC LIMIT $limit OFFSET $offset";
+                    $sql = "SELECT * FROM registered_resi WHERE is_archived = 0 ORDER BY id DESC LIMIT $limit OFFSET $offset";
                 }
 
                 $result = mysqli_query($conn, $sql);

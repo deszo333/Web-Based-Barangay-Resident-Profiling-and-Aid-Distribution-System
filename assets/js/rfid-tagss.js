@@ -8,8 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const rfidId = document.getElementById("rfid_id");
     const rfidNumber = document.getElementById("rfid_number");
-    const householdNumber = document.getElementById("household_number");
-    const headOfFamily = document.getElementById("head_of_family");
+    const householdSelect = document.getElementById("household_id");
     const scanBtn = document.getElementById("scanRfidBtn");
     const rfidOverlay = document.getElementById("rfidOverlay");
     const cancelRfid = document.getElementById("cancelRfid");
@@ -115,8 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         rfidId.value = editBtn.dataset.id || "";
         rfidNumber.value = editBtn.dataset.rfid || "";
-        householdNumber.value = editBtn.dataset.household || "";
-        headOfFamily.value = editBtn.dataset.head || "";
+        if(householdSelect) householdSelect.value = editBtn.dataset.householdid || "";
 
         submitBtn.innerText = "Update Tag"; // Only update submit button
         modal.classList.add("show");
@@ -166,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const rfidId = btn.dataset.id;
         if (!rfidId) return;
 
-        const action = activateBtn ? "Active" : "Inactive";
+        const action = activateBtn ? "Active" : "Disabled";
 
         fetch("toggle_rfid_status.php", {
             method: "POST",

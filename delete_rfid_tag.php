@@ -12,7 +12,7 @@ if (empty($rfid_id)) {
     exit;
 }
 
-$stmt = $conn->prepare("DELETE FROM rfid_tags WHERE rfid_id = ?");
+$stmt = $conn->prepare("DELETE FROM rfid_tags WHERE id = ?");
 $stmt->bind_param("i", $rfid_id);
 
 if ($stmt->execute()) {

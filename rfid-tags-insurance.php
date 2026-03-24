@@ -51,31 +51,21 @@ if (isset($_SESSION['role'])) {
 
     <!-- SUMMARY CARDS -->
     <div class="rfid-summary">
-
+        <?php
+        $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+        $tot = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM rfid_tags"))['c'];
+        $act = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM rfid_tags WHERE status='Active'"))['c'];
+        $dis = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM rfid_tags WHERE status!='Active'"))['c'];
+        ?>
         <div class="rfid-summary-card-1">
-            <div>
-                <p>Total Tags Issued</p>
-                <h3>120</h3>
-
-            </div>
+            <div><p>Total Tags Issued</p><h3><?= $tot ?></h3></div>
         </div>
-
         <div class="rfid-summary-card-2">
-            <div>
-                <p>Active Tags</p>
-                <h3>95</h3>
-                
-            </div>
+            <div><p>Active Tags</p><h3><?= $act ?></h3></div>
         </div>
-
         <div class="rfid-summary-card-3">
-            <div>
-                <p>Inactive Tags</p>
-                <h3>25</h3>
-                
-            </div>
+            <div><p>Inactive/Disabled</p><h3><?= $dis ?></h3></div>
         </div>
-
     </div>
 
   <div class="rp-card">
@@ -151,35 +141,46 @@ if (isset($_SESSION['role'])) {
             <tbody>
                 <?php
                 $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-
+                
                 // Get current status and search query
                 $status = $_GET['status'] ?? 'Active';
                 $search = $_GET['search'] ?? '';
 
-                // Base query
-                $query = "SELECT rfid_id, rfid_number, household_number, head_of_family, date_issued, status 
-                          FROM rfid_tags 
-                          WHERE 1 ";
+                // BASE NORMALIZED QUERY
+                $query = "
+                    SELECT 
+                        rt.id AS rfid_id,
+                        rt.rfid_number,
+                        h.household_number,
+                        CONCAT(head.first_name, ' ', head.last_name) AS head_of_family,
+                        rt.issued_date AS date_issued,
+                        rt.status,
+                        rt.household_id
+                    FROM rfid_tags rt
+                    JOIN registered_household h ON rt.household_id = h.id
+                    LEFT JOIN registered_resi head ON h.head_of_family_id = head.id
+                    WHERE 1=1 
+                ";
 
                 // Filter by status if not "all"
                 if ($status !== 'all') {
                     $status_safe = mysqli_real_escape_string($conn, $status);
-                    $query .= " AND status = '$status_safe' ";
+                    $query .= " AND rt.status = '$status_safe' ";
                 }
 
-                // Filter by search
+                // Filter by search against normalized tables
                 if (!empty($search)) {
                     $search_safe = mysqli_real_escape_string($conn, $search);
                     $query .= " AND (
-                        rfid_number LIKE '%$search_safe%' OR
-                        household_number LIKE '%$search_safe%' OR
-                        head_of_family LIKE '%$search_safe%'
+                        rt.rfid_number LIKE '%$search_safe%' OR
+                        h.household_number LIKE '%$search_safe%' OR
+                        CONCAT(head.first_name, ' ', head.last_name) LIKE '%$search_safe%'
                     ) ";
                 }
 
                 // Sort by date issued
-                $query .= " ORDER BY date_issued DESC";
-
+                $query .= " ORDER BY rt.issued_date DESC";
+                
                 $result = mysqli_query($conn, $query);
 
                 if ($result && mysqli_num_rows($result) > 0):
@@ -206,10 +207,8 @@ if (isset($_SESSION['role'])) {
                         <button class="edit" 
                             data-id="<?= $row['rfid_id'] ?>"
                             data-rfid="<?= htmlspecialchars($row['rfid_number']) ?>"
-                            data-household="<?= htmlspecialchars($row['household_number']) ?>"
-                            data-head="<?= htmlspecialchars($row['head_of_family']) ?>"
+                            data-householdid="<?= $row['household_id'] ?>"
                         >Edit</button>
-
                         <button class="delete" data-id="<?= $row['rfid_id'] ?>">Delete</button>
                     </td>
                 </tr>
@@ -224,7 +223,6 @@ if (isset($_SESSION['role'])) {
                 </tr>
                 <?php
                 endif;
-
                 mysqli_close($conn);
                 ?>
             </tbody>
@@ -249,27 +247,31 @@ if (isset($_SESSION['role'])) {
             <input type="hidden" name="rfid_id" id="rfid_id">
 
             <div class="modal-body">
-                <!-- RFID Number + Scan Button -->
                 <div class="rfid-row">
-        <label for="rfid_number">RFID Number</label>
-        <div class="rfid-input-group">
-            <input type="text" name="rfid_number" id="rfid_number" class="rfid-number" placeholder="RFID Number" required>
-            <button type="button" class="rfid-btn" id="scanRfidBtn">
-                <i class="fa-solid fa-id-card"></i>
-            </button>
-        </div>
-    </div>
-
-                <!-- Household Number -->
-                <div class="modal-row">
-                    <label for="household_number">Household Number</label>
-                    <input type="text" name="household_number" id="household_number" placeholder="Household Number">
+                    <label for="rfid_number">RFID Number</label>
+                    <div class="rfid-input-group">
+                        <input type="text" name="rfid_number" id="rfid_number" class="rfid-number" placeholder="Scan or Type RFID" required>
+                        <button type="button" class="rfid-btn" id="scanRfidBtn">
+                            <i class="fa-solid fa-id-card"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Head of Family -->
                 <div class="modal-row">
-                    <label for="head_of_family">Head Of Family</label>
-                    <input type="text" name="head_of_family" id="head_of_family" placeholder="Head Of Family" required>
+                    <label>Assign to Household</label>
+                    <select name="household_id" id="household_id" required style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc;">
+                        <option value="">-- Select a Household --</option>
+                        <?php
+                        $modal_conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+                        $h_res = mysqli_query($modal_conn, "SELECT h.id, h.household_number, CONCAT(head.first_name, ' ', head.last_name) as head_name FROM registered_household h LEFT JOIN registered_resi head ON h.head_of_family_id = head.id WHERE h.is_archived = 0");
+                        if ($h_res) {
+                            while($h_row = mysqli_fetch_assoc($h_res)){
+                                echo "<option value='{$h_row['id']}'>{$h_row['household_number']} - {$h_row['head_name']}</option>";
+                            }
+                        }
+                        mysqli_close($modal_conn);
+                        ?>
+                    </select>
                 </div>
             </div>
 

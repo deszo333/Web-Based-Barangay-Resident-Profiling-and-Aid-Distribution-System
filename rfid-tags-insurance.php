@@ -310,5 +310,50 @@ fetch("assets/popup/popup.html")
 <script src="assets/js/rfid-tagss.js"></script>
 <script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
 
+<script src="rfid/rfid_scanner.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const scanBtn = document.getElementById("scanRfidBtn");
+    const rfidInput = document.getElementById("rfid_number");
+    const rfidOverlay = document.getElementById("rfidOverlay");
+    const cancelRfidBtn = document.getElementById("cancelRfid");
+
+    // scan button click
+    if (scanBtn) {
+        scanBtn.addEventListener("click", () => {
+            // show overlay
+            if (rfidOverlay) rfidOverlay.style.display = "flex";
+
+            // connect scanner if not already connected
+            if (typeof rfidPort === 'undefined' || !rfidPort) {
+                connectRFIDScanner(assignRFIDToInput, scanBtn);
+            }
+        });
+    }
+
+    // callback for successful scan
+    function assignRFIDToInput(scannedID) {
+        console.log("Assigning RFID to Tag Issuance:", scannedID);
+        // uid to input box
+        if (rfidInput) {
+            rfidInput.value = scannedID;
+        }
+        
+        // hide overlay after
+        if (rfidOverlay) {
+            rfidOverlay.style.display = "none";
+        }
+    }
+
+    // close overlay on cancel
+    if (cancelRfidBtn) {
+        cancelRfidBtn.addEventListener("click", () => {
+            if (rfidOverlay) rfidOverlay.style.display = "none";
+        });
+    }
+});
+</script>
+
 </body>
 </html>

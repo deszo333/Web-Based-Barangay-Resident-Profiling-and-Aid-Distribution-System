@@ -44,37 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let rfidBuffer = "";
     let scanning = false;
 
-    // Show RFID overlay when scan button is clicked
-    if (scanBtn) {
-        scanBtn.addEventListener("click", () => {
-            if (rfidOverlay) rfidOverlay.classList.add("show");
-            rfidBuffer = "";
-            scanning = true;
-        });
-    }
-
-    // Cancel RFID scan
-    if (cancelRfid) {
-        cancelRfid.addEventListener("click", () => {
-            if (rfidOverlay) rfidOverlay.classList.remove("show");
-            scanning = false;
-            rfidBuffer = "";
-        });
-    }
-
-    // Keyboard simulation for RFID input
-    document.addEventListener("keydown", (e) => {
-        if (!scanning) return;
-        if (e.key === "Enter") {
-            if (rfidInput) rfidInput.value = rfidBuffer;
-            if (rfidOverlay) rfidOverlay.classList.remove("show");
-            scanning = false;
-            rfidBuffer = "";
-        } else if (e.key.length === 1) {
-            rfidBuffer += e.key;
-        }
-    });
-
     // SUBMIT FORM (Add or Update)
     form.addEventListener("submit", function (e) {
         e.preventDefault();

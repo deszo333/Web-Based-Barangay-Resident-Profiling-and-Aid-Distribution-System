@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let expanded = false;
 
     // ================================
-    // INIT CHARTS FUNCTION (IMPORTANT)
+    // INIT CHARTS FUNCTION
     // ================================
     function initCharts() {
         const items = document.querySelectorAll(".program-item");
@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const wrapper = document.querySelector(".program-list-wrapper");
                 if (wrapper) wrapper.style.maxHeight = "none";
 
-                // IMPORTANT: wait DOM update then render charts
+                // IMPORTANT: render charts AFTER DOM update
                 requestAnimationFrame(() => {
                     initCharts();
                 });
@@ -153,9 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ================================
-    // INITIAL LOAD CHARTS (IMPORTANT FIX)
-    // ================================
-    initCharts();
+    
 
 });

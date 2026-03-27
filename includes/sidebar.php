@@ -62,8 +62,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <p class="sidebar-section-title">Settings</p>
         <ul class="sidebar-menu">
             <li>
-                <a href="admin-settings.html" class="<?= ($currentPage == 'admin-settings.html') ? 'active' : '' ?>">
-                    <i class="fa-solid fa-cogs"></i> <span>Admin Settings</span>
+                <a href="account-man.php" class="<?= ($currentPage == 'account-man.php') ? 'active' : '' ?>">
+                    <i class="fa-solid fa-cogs"></i> <span>Account Management</span>
                 </a>
             </li>
             <li>

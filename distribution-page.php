@@ -186,7 +186,7 @@ fetch("assets/popup/popup.html")
 <script src="assets/popup/popup.js" defer></script>
 
 <script src="assets/js/distribution-page.js"></script>
-<script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+<script src="includes/sidebarss.js?v=2" defer></script><?php include 'includes/sidebar.php'; ?>
 
 </body>
 </html>

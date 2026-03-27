@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="assets/popup/popup.js" defer></script>
 
 <script src="assets/js/start-distribution.js"></script>
-<script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+<script src="includes/sidebarss.js?v=2" defer></script><?php include 'includes/sidebar.php'; ?>
 
 </body>
 </html>

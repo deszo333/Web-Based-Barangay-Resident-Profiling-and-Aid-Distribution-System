@@ -372,7 +372,7 @@ fetch("assets/popup/popup.html")
 
 
 <script src="assets/js/resident-profilingss.js"></script>
-<script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+<script src="includes/sidebarss.js?v=2" defer></script><?php include 'includes/sidebar.php'; ?>
 
 </body>
 </html>

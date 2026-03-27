@@ -1,5 +1,6 @@
 <?php
-$conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+require_once 'db_connect.php';
+$current_user_id = $_SESSION['user_id'] ?? null;
 
 $id      = (int) $_POST['resident_id'];
 $version = isset($_POST['version']) && $_POST['version'] !== '' ? (int)$_POST['version'] : null;
@@ -61,15 +62,29 @@ mysqli_stmt_bind_param(
 mysqli_stmt_execute($stmt);
 mysqli_stmt_close($stmt);
 
-mysqli_close($conn);
-
 // Correct check: use pre_version to confirm the WHERE clause matched
 $pre_version = (int) $pre_version;
 
 if ($pre_version === $version) {
     // Our version matched what was in DB before update = we owned this update
+    
+    // === TRIGGER AUDIT LOG FOR RESIDENT EDIT ===
+    // Get resident's full name for readable audit details
+    $residentInfo = mysqli_fetch_assoc(mysqli_query($conn, "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM registered_resi WHERE id = $id"));
+    $resident_name = $residentInfo['full_name'] ?? "ID: $id";
+    
+    $audit_data = [
+        "action_summary" => "Resident Profile Updated",
+        "resident_name" => $resident_name,
+        "resident_id" => $id,
+        "fields_modified" => "Multiple profile fields"
+    ];
+    log_audit($conn, $current_user_id, "Update", "Resident Profiling", json_encode($audit_data));
+    
     echo "success";
 } else {
     // DB was already ahead before we even ran = someone else updated first
     echo "conflict";
 }
+
+mysqli_close($conn);

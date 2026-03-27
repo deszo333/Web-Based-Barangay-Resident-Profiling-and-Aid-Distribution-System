@@ -2,6 +2,7 @@ const sidebar = document.getElementById("sidebar");
 const toggleBtn = document.getElementById("toggleBtn");
 const toggleIcon = document.getElementById("toggleIcon");
 const main = document.querySelector(".rp-dashboard");
+const logoutBtn = document.getElementById("logoutBtn"); 
 
 toggleBtn.addEventListener("click", () => {
     sidebar.classList.toggle("expanded");
@@ -18,7 +19,8 @@ logoutBtn.addEventListener("click", () => {
             message: "Are you sure you want to logout?",
             type: "warning",
             onOk: () => {
-                window.location.href = "login.php";
+                // actually destroy
+                window.location.href = "logout.php";
             }
         });
     });

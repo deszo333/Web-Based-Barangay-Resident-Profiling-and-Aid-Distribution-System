@@ -189,7 +189,7 @@ fetch("assets/popup/popup.html")
 
 
 <script src="assets/js/reports-logs.js"></script>
-<script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+<script src="includes/sidebarss.js?v=2" defer></script><?php include 'includes/sidebar.php'; ?>
 
 </body>
 </html>

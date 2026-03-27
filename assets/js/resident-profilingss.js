@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modalTitle = document.getElementById("modalTitle");
     const modalIcon = document.getElementById("modalIcon");
-    const saveBtn = form.querySelector("button[type='submit']");
+    const saveBtn = form ? form.querySelector("button[type='submit']") : null;
 
     const membersOverlay = document.getElementById("membersOverlay");
     const membersBody = document.getElementById("membersBody");

@@ -153,6 +153,7 @@ $search = $_GET['search'] ?? '';
                                     <td>
                                         <button class='edit'
                                             data-id='{$row['id']}'
+                                            data-version='{$row['version']}'
                                             data-name='{$row['program_name']}'
                                             data-type='{$row['aid_type']}'
                                             data-date='{$row['date_scheduled']}'
@@ -192,6 +193,7 @@ $search = $_GET['search'] ?? '';
 
         <form id="addResidentForm">
             <input type="hidden" name="id" id="program_id">
+            <input type="hidden" name="version" id="program_version">
 
             <label>Program Name</label>
             <input type="text" name="program_name" placeholder="Program Name" required>
@@ -233,6 +235,6 @@ fetch("assets/popup/popup.html")
 <script src="assets/popup/popup.js" defer></script>
 
 <script src="assets/js/aid-programs-setup.js"></script>
-<script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+<script src="includes/sidebarss.js?v=2" defer></script><?php include 'includes/sidebar.php'; ?>
 </body>
 </html>

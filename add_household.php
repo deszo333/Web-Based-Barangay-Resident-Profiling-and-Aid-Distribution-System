@@ -1,12 +1,6 @@
 <?php
 require 'auth_check.php';
-
-// DB connection
-$conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-if(!$conn){
-    error_log("Database connection failed: " . mysqli_connect_error());
-    die("error");
-}
+require_once 'db_connect.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
@@ -51,13 +45,48 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             mysqli_stmt_bind_param($stmt, "sis", $household_number, $head_of_family_id, $address);
             mysqli_stmt_execute($stmt);
             $household_id = mysqli_insert_id($conn);
+            
+            // Log household creation
+            $current_user_id = $_SESSION['user_id'] ?? null;
+            $audit_data = [
+                "action_summary" => "New Household Created",
+                "household_number" => $household_number,
+                "head_of_family_id" => $head_of_family_id,
+                "address" => $address
+            ];
+            log_audit($conn, $current_user_id, "Create", "Household Management", json_encode($audit_data));
 
         } else {
-            // UPDATE existing household
+            // UPDATE existing household with occ
             $household_id = $id;
-            $stmt = mysqli_prepare($conn, "UPDATE registered_household SET head_of_family_id=?, address=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, "isi", $head_of_family_id, $address, $household_id);
+            $version = isset($_POST['version']) && $_POST['version'] !== '' ? (int)$_POST['version'] : null;
+            if ($version === null) { echo "error"; exit; }
+
+            $stmt = mysqli_prepare($conn, "UPDATE registered_household SET head_of_family_id=?, address=?, version=version+1 WHERE id=? AND version=?");
+            mysqli_stmt_bind_param($stmt, "isii", $head_of_family_id, $address, $household_id, $version);
             mysqli_stmt_execute($stmt);
+            
+            // If 0 rows affected, the version didnt match 
+            if (mysqli_stmt_affected_rows($stmt) === 0) {
+                echo "conflict";
+                mysqli_rollback($conn);
+                exit;
+            }
+            
+            // === TRIGGER AUDIT LOG FOR HOUSEHOLD EDIT ===
+            // Get household number and head's name for readable audit details
+            $hhInfo = mysqli_fetch_assoc(mysqli_query($conn, "SELECT household_number FROM registered_household WHERE id = $household_id"));
+            $headInfo = mysqli_fetch_assoc(mysqli_query($conn, "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM registered_resi WHERE id = $head_of_family_id"));
+            $head_name = $headInfo['full_name'] ?? "ID: $head_of_family_id";
+            
+            $current_user_id = $_SESSION['user_id'] ?? null;
+            $audit_data = [
+                "action_summary" => "Household Profile Updated",
+                "household_number" => $hhInfo['household_number'],
+                "head_of_family" => $head_name,
+                "address" => $address
+            ];
+            log_audit($conn, $current_user_id, "Update", "Household Management", json_encode($audit_data));
 
             // Unlink old members first
             mysqli_query($conn, "UPDATE registered_resi SET household_id = NULL WHERE household_id = $household_id");

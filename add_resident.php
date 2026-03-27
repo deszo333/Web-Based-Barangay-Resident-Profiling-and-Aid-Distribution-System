@@ -1,9 +1,6 @@
 <?php
-$conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-if (!$conn) {
-    echo "error";
-    exit;
-}
+// 1. Require our new hub
+require_once 'db_connect.php';
 
 $first = $_POST['first_name'] ?? '';
 $middle = $_POST['middle_name'] ?? '';
@@ -30,7 +27,6 @@ $stmt = mysqli_prepare($conn,
     (first_name, middle_name, last_name, address, birthdate, age, gender, civil_status, occupation, voters_registration_no, contact)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 );
-
 mysqli_stmt_bind_param(
     $stmt,
     "sssssisssss",
@@ -47,7 +43,26 @@ mysqli_stmt_bind_param(
     $contact
 );
 
-echo mysqli_stmt_execute($stmt) ? "success" : "error";
+// 2. Execute and Trigger Audit Log
+if (mysqli_stmt_execute($stmt)) {
+    $new_id = mysqli_insert_id($conn);
+    $current_user_id = $_SESSION['user_id'] ?? null;
+    $full_name = trim("$first $middle $last");
+    
+    // Log the creation
+    $audit_data = [
+        "action_summary" => "New Resident Profile Created",
+        "resident_name" => $full_name,
+        "resident_id" => $new_id,
+        "address" => $address,
+        "birthdate" => $birthdate
+    ];
+    log_audit($conn, $current_user_id, "Create", "Resident Profiling", json_encode($audit_data));
+    
+    echo "success";
+} else {
+    echo "error";
+}
 
 mysqli_stmt_close($stmt);
 mysqli_close($conn);

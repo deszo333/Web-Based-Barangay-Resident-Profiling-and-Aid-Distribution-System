@@ -1,6 +1,5 @@
 <?php
-$conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-if (!$conn) { die("error"); }
+require_once 'db_connect.php';
 
 $rfid_id = trim($_POST['rfid_id'] ?? '');
 $rfid_number = trim($_POST['rfid_number'] ?? '');
@@ -29,11 +28,56 @@ try {
         $conn->query("UPDATE rfid_tags SET status='Disabled' WHERE household_id = " . intval($household_id));
         $stmt = $conn->prepare("INSERT INTO rfid_tags (household_id, rfid_number, status) VALUES (?, ?, 'Active')");
         $stmt->bind_param("is", $household_id, $rfid_number);
+        $stmt->execute();
+        $new_rfid_id = mysqli_insert_id($conn);
+        
+        $current_user_id = $_SESSION['user_id'] ?? null;
+        
+        // Get household number for readable details
+        $hhInfo = mysqli_fetch_assoc(mysqli_query($conn, "SELECT household_number FROM registered_household WHERE id = $household_id"));
+        $hh_number = $hhInfo['household_number'] ?? "ID: $household_id";
+        
+        // Log RFID tag issuance
+        $audit_data = [
+            "action_summary" => "RFID Tag Issued",
+            "rfid_number" => $rfid_number,
+            "rfid_id" => $new_rfid_id,
+            "household_number" => $hh_number,
+            "status" => "Active"
+        ];
+        log_audit($conn, $current_user_id, "Create", "RFID Tag Issuance", json_encode($audit_data));
     } else {
-        $stmt = $conn->prepare("UPDATE rfid_tags SET household_id = ?, rfid_number = ? WHERE id = ?");
-        $stmt->bind_param("isi", $household_id, $rfid_number, $rfid_id);
+        // UPDATE (OCC Enabled)
+        $version = isset($_POST['version']) && $_POST['version'] !== '' ? (int)$_POST['version'] : null;
+        if ($version === null) { echo "error"; exit; }
+
+        $stmt = $conn->prepare("UPDATE rfid_tags SET household_id = ?, rfid_number = ?, version=version+1 WHERE id = ? AND version=?");
+        $stmt->bind_param("isii", $household_id, $rfid_number, $rfid_id, $version);
+        $stmt->execute();
+        
+        // Check for conflict
+        if ($stmt->affected_rows === 0) {
+            echo "conflict";
+            mysqli_rollback($conn);
+            $conn->close();
+            exit;
+        }
+        
+        // === TRIGGER AUDIT LOG FOR RFID EDIT ===
+        // Get household number for readable audit details
+        $hhInfo = mysqli_fetch_assoc(mysqli_query($conn, "SELECT household_number FROM registered_household WHERE id = $household_id"));
+        $hh_number = $hhInfo['household_number'] ?? "ID: $household_id";
+        
+        $current_user_id = $_SESSION['user_id'] ?? null;
+        $audit_data = [
+            "action_summary" => "RFID Tag Reassigned",
+            "rfid_number" => $rfid_number,
+            "rfid_id" => $rfid_id,
+            "household_number" => $hh_number
+        ];
+        log_audit($conn, $current_user_id, "Update", "RFID Management", json_encode($audit_data));
     }
-    $stmt->execute();
+    
     mysqli_commit($conn);
     echo "success";
 } catch (Exception $e) {

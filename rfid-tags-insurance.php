@@ -150,6 +150,7 @@ if (isset($_SESSION['role'])) {
                 $query = "
                     SELECT 
                         rt.id AS rfid_id,
+                        rt.version,
                         rt.rfid_number,
                         h.household_number,
                         CONCAT(head.first_name, ' ', head.last_name) AS head_of_family,
@@ -206,6 +207,7 @@ if (isset($_SESSION['role'])) {
                     <td>
                         <button class="edit" 
                             data-id="<?= $row['rfid_id'] ?>"
+                            data-version="<?= $row['version'] ?>"
                             data-rfid="<?= htmlspecialchars($row['rfid_number']) ?>"
                             data-householdid="<?= $row['household_id'] ?>"
                         >Edit</button>
@@ -245,6 +247,7 @@ if (isset($_SESSION['role'])) {
 
         <form id="addResidentForm">
             <input type="hidden" name="rfid_id" id="rfid_id">
+            <input type="hidden" name="version" id="rfid_version">
 
             <div class="modal-body">
                 <div class="rfid-row">
@@ -308,7 +311,7 @@ fetch("assets/popup/popup.html")
 <script src="assets/popup/popup.js" defer></script>
 
 <script src="assets/js/rfid-tagss.js"></script>
-<script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+<script src="includes/sidebarss.js?v=2" defer></script><?php include 'includes/sidebar.php'; ?>
 
 <script src="rfid/rfid_scanner.js"></script>
 

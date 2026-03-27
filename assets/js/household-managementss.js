@@ -332,6 +332,13 @@ if (searchInput) {
                 .then(data => {
                     if (data.trim() === 'success') {
                         location.reload();
+                    } else if (data.trim() === 'conflict') {
+                        // === OCC CONFLICT HANDLER ===
+                        Popup.open({
+                            title: "Update Conflict",
+                            message: "Data changed! Another staff member updated this household while you were viewing it. Please refresh and try again.",
+                            type: "danger"
+                        });
                     } else {
                         Popup.open({
                             title: "Save Failed",
@@ -395,6 +402,7 @@ if (searchInput) {
             if (form) form.reset();
             
             if (householdId) householdId.value = editBtn.dataset.id;
+            if (form.version) form.version.value = editBtn.dataset.version; 
             if (form.household_number) form.household_number.value = editBtn.dataset.number;
             
             if (headInput) headInput.value = editBtn.dataset.headname;

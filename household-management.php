@@ -123,7 +123,7 @@ if (isset($_SESSION['role'])) {
         // Main SQL
         if (!empty($search)) {
             $sql = "
-                SELECT h.id, h.household_number, h.address, h.head_of_family_id,
+                SELECT h.id, h.version, h.household_number, h.address, h.head_of_family_id,
                        CONCAT(head.first_name, ' ', head.last_name) AS head_name,
                        rt.rfid_number AS rfid,
                        GROUP_CONCAT(CONCAT(m.first_name, ' ', m.last_name) SEPARATOR ', ') AS members_list,
@@ -139,7 +139,7 @@ if (isset($_SESSION['role'])) {
                 GROUP BY h.id ORDER BY h.id DESC LIMIT $limit OFFSET $offset
             ";
         } else {
-            $sql = "SELECT h.id, h.household_number, h.address, h.head_of_family_id, CONCAT(head.first_name, ' ', head.last_name) AS head_name, rt.rfid_number AS rfid, GROUP_CONCAT(CONCAT(m.first_name, ' ', m.last_name) SEPARATOR ', ') AS members_list, GROUP_CONCAT(m.id SEPARATOR ',') AS members_ids FROM registered_household h LEFT JOIN registered_resi head ON h.head_of_family_id = head.id LEFT JOIN registered_resi m ON m.household_id = h.id LEFT JOIN rfid_tags rt ON rt.household_id = h.id AND rt.status = 'Active' WHERE h.is_archived = 0 GROUP BY h.id ORDER BY h.id DESC LIMIT $limit OFFSET $offset";
+            $sql = "SELECT h.id, h.version, h.household_number, h.address, h.head_of_family_id, CONCAT(head.first_name, ' ', head.last_name) AS head_name, rt.rfid_number AS rfid, GROUP_CONCAT(CONCAT(m.first_name, ' ', m.last_name) SEPARATOR ', ') AS members_list, GROUP_CONCAT(m.id SEPARATOR ',') AS members_ids FROM registered_household h LEFT JOIN registered_resi head ON h.head_of_family_id = head.id LEFT JOIN registered_resi m ON m.household_id = h.id LEFT JOIN rfid_tags rt ON rt.household_id = h.id AND rt.status = 'Active' WHERE h.is_archived = 0 GROUP BY h.id ORDER BY h.id DESC LIMIT $limit OFFSET $offset";
         }
 
         $result = mysqli_query($conn, $sql);
@@ -162,6 +162,7 @@ if (isset($_SESSION['role'])) {
                     <td>
                         <button class='edit'
                             data-id='{$row['id']}'
+                            data-version='{$row['version']}'
                             data-number='{$row['household_number']}'
                             data-headid='{$row['head_of_family_id']}'
                             data-headname='{$row['head_name']}'
@@ -243,6 +244,7 @@ if (isset($_SESSION['role'])) {
         
 <form id="addResidentForm">
     <input type="hidden" id="resident_id" name="resident_id">
+    <input type="hidden" id="household_version" name="version">
     
     <input type="hidden" id="headIdInput" name="head_of_family_id">
     <input type="hidden" id="membersIdInput" name="household_member_ids">
@@ -412,7 +414,7 @@ fetch("assets/popup/popup.html")
 <script src="assets/popup/popup.js" defer></script>
 
 <script src="assets/js/household-managementss.js"></script>
-<script src="includes/sidebarss.js" defer></script><?php include 'includes/sidebar.php'; ?>
+<script src="includes/sidebarss.js?v=2" defer></script><?php include 'includes/sidebar.php'; ?>
 
 <script src="rfid/rfid_scanner.js"></script>
 

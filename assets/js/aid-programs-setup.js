@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!editBtn) return;
 
         programId.value = editBtn.dataset.id || "";
+        if(form.version) form.version.value = editBtn.dataset.version || ""; // Map version for OCC
         form.program_name.value = editBtn.dataset.name || "";
         form.aid_type.value = editBtn.dataset.type || "";
         form.date_scheduled.value = editBtn.dataset.date || "";
@@ -78,7 +79,14 @@ document.addEventListener("DOMContentLoaded", () => {
                             type: "success",
                             onOk: () => location.reload()
                         });
-
+                    } else if (data === "conflict") {
+                        // === OCC CONFLICT HANDLER ===
+                        closeModal();
+                        Popup.open({
+                            title: "Update Conflict",
+                            message: "Another staff member updated this aid program while you were viewing it. Please refresh and try again.",
+                            type: "danger"
+                        });
                     } else {
                         Popup.open({
                             title: "Error",

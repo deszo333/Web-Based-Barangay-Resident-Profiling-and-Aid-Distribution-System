@@ -61,6 +61,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 closeModal();
                 form.reset();
                 location.reload();
+            } else if (data === "conflict") {
+                // === OCC CONFLICT HANDLER ===
+                alert("Update Conflict! Another staff member modified this RFID tag. Please refresh the page and try again.");
             } else if (data === "rfid_exists") {
                 alert("RFID already exists!");
             } else if (data === "missing") {
@@ -82,6 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!editBtn) return;
 
         rfidId.value = editBtn.dataset.id || "";
+        if(form.version) form.version.value = editBtn.dataset.version || ""; // Map version for OCC
         rfidNumber.value = editBtn.dataset.rfid || "";
         if(householdSelect) householdSelect.value = editBtn.dataset.householdid || "";
 

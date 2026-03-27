@@ -1,6 +1,19 @@
 <?php
 session_start();
 
+// if already have a session (not logged out), send them straight to their dashboard
+if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
+    $role = strtolower($_SESSION['role']);
+    if ($role === 'admin') {
+        header("Location: admin-dashboard.php");
+    } elseif ($role === 'staff') {
+        header("Location: staff-dashboard.php");
+    } else {
+        header("Location: dashboard.html");
+    }
+    exit();
+}
+
 // --- DATABASE CONNECTION ---
 $servername = "localhost";
 $dbusername = "root";

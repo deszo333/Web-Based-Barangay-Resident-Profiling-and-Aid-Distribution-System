@@ -307,6 +307,37 @@ button i {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.expanded-view {
+    background: #eef6ff;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+
+.mini-chart {
+    width: 120px !important;
+    height: 120px !important;
+}
+
+.program-expanded {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.program-item.active {
+    background: #eef6ff;
+    transform: scale(1.02);
+}
+
+.program-item.active .program-expanded {
+    display: block;
 }
 
 .program-name {
@@ -341,4 +372,32 @@ button i {
 
 .see-more-btn:hover {
     background: #0f3863;
+}
+
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    text-align: center;
+}
+
+.close-modal {
+    float: right;
+    font-size: 20px;
+    cursor: pointer;
 }

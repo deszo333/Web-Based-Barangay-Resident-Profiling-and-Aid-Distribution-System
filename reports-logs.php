@@ -19,6 +19,7 @@ if (isset($_SESSION['role'])) {
     <link rel="stylesheet" href="assets/css/reports-logs.css">
     <link rel="stylesheet" href="includes/sidebars.css">
     <link rel="stylesheet" href="fontawesome/fontawesome/css/all.css">
+    <script src="js/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -65,24 +66,28 @@ if (isset($_SESSION['role'])) {
             <div class="form-field">
                 <label>Program Name</label>
                 <select id="reportType">
-                    <option value="" disabled selected>Select Program</option>
-                    <option>Residents Report</option>
-                    <option>Household Report</option>
-                    <option>Senior Citizens</option>
-                    <option>Registered Voters</option>
-                </select>
+    <option value="" disabled selected>Select Program</option>
+    <?php
+    $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+
+    $sql = "SELECT DISTINCT program_name FROM aid_program";
+    $result = mysqli_query($conn, $sql);
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<option value='{$row['program_name']}'>{$row['program_name']}</option>";
+    }
+
+    mysqli_close($conn);
+    ?>
+</select>
             </div>
 
             <!-- Program -->
             <div class="form-field">
                 <label>Aid Type</label>
-                <select id="program">
-                    <option value="" disabled selected>Select Aid Type</option>
-                    <option>All Programs</option>
-                    <option>Financial Aid</option>
-                    <option>Medical Assistance</option>
-                    <option>Food Distribution</option>
-                </select>
+                <select id="program" disabled>
+    <option value="" disabled selected>Select Aid Type</option>
+</select>
             </div>
 
             <!-- Generate Button -->
@@ -112,7 +117,7 @@ if (isset($_SESSION['role'])) {
     
 
 
-        <!-- PROGRAM-WISE DISTRIBUTION CARD -->
+       <!-- PROGRAM-WISE DISTRIBUTION CARD -->
 <div class="rp-card program-distribution-card">
 
     <!-- CARD HEADER -->
@@ -124,49 +129,78 @@ if (isset($_SESSION['role'])) {
     </div>
 
     <!-- PROGRAM LIST WRAPPER -->
-<div class="program-list-wrapper">
-    <div class="program-list">
-        <?php
-        $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-        if (!$conn) {
-            die("Connection failed: " . mysqli_connect_error());
-        }
-
-        $sql = "SELECT program_name, beneficiaries FROM aid_program ORDER BY id DESC";
-        $result = mysqli_query($conn, $sql);
-
-        $count = 0;
-        if ($result && mysqli_num_rows($result) > 0) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $count++;
-                // Only show first 3 items initially
-                $hiddenClass = $count > 3 ? "hidden-program" : "";
-                echo "<div class='program-item $hiddenClass'>
-                        <div class='program-name'>{$row['program_name']}</div>
-                        <div class='program-details'>
-                            <span>{$row['beneficiaries']} unique beneficiaries</span>
-                            <span>Distributions: 0</span>
-                        </div>
-                    </div>";
+    <div class="program-list-wrapper">
+        <div class="program-list">
+            <?php
+            $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+            if (!$conn) {
+                die("Connection failed: " . mysqli_connect_error());
             }
-        } else {
-            echo "<p style='text-align:center; color:#777;'>No program distribution data found.</p>";
-        }
 
-        mysqli_close($conn);
-        ?>
+            $sql = "SELECT program_name, beneficiaries FROM aid_program ORDER BY id DESC";
+            $result = mysqli_query($conn, $sql);
+
+            $count = 0;
+            if ($result && mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $count++;
+
+                    // Only show first 3 items initially
+                    $hiddenClass = $count > 3 ? "hidden-program" : "";
+
+                    echo "<div class='program-item $hiddenClass'
+                    data-program='{$row['program_name']}'
+                    data-beneficiaries='{$row['beneficiaries']}'
+                    data-distributed='{$row['beneficiaries']}'>
+
+                    <div class='program-name'>{$row['program_name']}</div>
+
+                    <div class='program-details'>
+                        <span>{$row['beneficiaries']} unique beneficiaries</span>
+                        <span>Distributions: 0</span>
+                    </div>
+
+                    <!-- ADD THIS -->
+                    <canvas class='mini-chart'></canvas>
+
+                </div>";
+                }
+            } else {
+                echo "<p style='text-align:center; color:#777;'>No program distribution data found.</p>";
+            }
+
+            mysqli_close($conn);
+            ?>
+        </div>
     </div>
-</div>
 
-<!-- SEE MORE BUTTON OUTSIDE FADE -->
-<?php if ($count > 3): ?>
-<div class="see-more-btn-wrapper">
-    <button class="see-more-btn">See More</button>
+    <!-- SEE MORE BUTTON OUTSIDE FADE -->
+    <?php if ($count > 3): ?>
+    <div class="see-more-btn-wrapper">
+        <button class="see-more-btn">See More</button>
+    </div>
+    <?php endif; ?>
+
 </div>
-<?php endif; ?>
 
 
 </main>
+
+<div id="programModal" class="modal-overlay">
+    <div class="modal-content">
+
+        <span class="close-modal">&times;</span>
+
+        <h2 id="modalProgramName"></h2>
+
+        <p><strong>Total Beneficiaries:</strong> <span id="modalBeneficiaries"></span></p>
+        <p><strong>Distributed:</strong> <span id="modalDistributed"></span></p>
+
+        <!-- Chart -->
+        <canvas id="programChart" width="300" height="300"></canvas>
+
+    </div>
+</div>
 
 <!-- Custom Popup -->
 <link rel="stylesheet" href="assets/popup/popup.css">

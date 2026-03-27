@@ -70,7 +70,7 @@ mysqli_close($conn);
     <div class="sidebar-section">
         <p class="sidebar-section-title">Settings</p>
         <ul class="sidebar-menu">
-            <li><a href="admin-settings.html"><i class="fa-solid fa-cogs"></i> <span>Admin Settings</span></a></li>
+            <li><a href="account-man.php"><i class="fa-solid fa-cogs"></i> <span>Account Management</span></a></li>
             <li><a href="signup.php"><i class="fa-solid fa-user-plus"></i> <span>Create Staff Account</span></a></li>
         </ul>
     </div>
@@ -200,11 +200,11 @@ mysqli_close($conn);
         </div>
     </a>
 
-    <a href="admin-settings.html" class="actions-card-7">
+    <a href="account-man.php" class="actions-card-7">
         <div class="card-content">
             <span class="card-icon"><i class="fas fa-cogs"></i></span>
             <div class="card-text">
-                <span>Admin Settings</span>
+                <span>Account Management</span>
                 <p>System configuration</p>
             </div>
         </div>

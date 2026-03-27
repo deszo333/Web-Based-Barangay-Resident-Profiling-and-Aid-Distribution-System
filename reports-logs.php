@@ -63,9 +63,9 @@ if (isset($_SESSION['role'])) {
 
             <!-- Report Type -->
             <div class="form-field">
-                <label>Report Type</label>
+                <label>Program Name</label>
                 <select id="reportType">
-                    <option value="" disabled selected>Select Report</option>
+                    <option value="" disabled selected>Select Program</option>
                     <option>Residents Report</option>
                     <option>Household Report</option>
                     <option>Senior Citizens</option>
@@ -75,9 +75,9 @@ if (isset($_SESSION['role'])) {
 
             <!-- Program -->
             <div class="form-field">
-                <label>Program</label>
+                <label>Aid Type</label>
                 <select id="program">
-                    <option value="" disabled selected>Select Program</option>
+                    <option value="" disabled selected>Select Aid Type</option>
                     <option>All Programs</option>
                     <option>Financial Aid</option>
                     <option>Medical Assistance</option>
@@ -96,10 +96,6 @@ if (isset($_SESSION['role'])) {
 
         <!-- DOWNLOAD BUTTONS -->
         <div class="download-section">
-
-            <button class="download pdf">
-                <i class="fa-solid fa-file-pdf"></i> Download PDF
-            </button>
 
             <button class="download excel">
                 <i class="fa-solid fa-file-excel"></i> Download Excel

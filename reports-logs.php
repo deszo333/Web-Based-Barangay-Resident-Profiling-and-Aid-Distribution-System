@@ -47,11 +47,50 @@ if (isset($_SESSION['role'])) {
 
 <!-- MAIN CONTENT -->
 <main class="rp-dashboard">
-    
-    <!-- GENERATE REPORT CARD -->
+
+    <!-- AUDIT LOGS CARD -->
+    <div class="rp-card audit-card">
+
+        <!-- HEADER -->
+        <div class="rp-header">
+            <div class="header-text">
+                <h2>Audit Logs</h2>
+                <p>Track system activities and user actions</p>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="audit-table-wrapper">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>User</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2026-03-28 10:15 AM</td>
+                        <td>Admin</td>
+                        <td>Generated distribution report</td>
+                    </tr>
+                    <tr>
+                        <td>2026-03-28 09:40 AM</td>
+                        <td>Staff 1</td>
+                        <td>Added new beneficiary</td>
+                    </tr>
+                
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+        
+    <!-- MERGED REPORT CARD -->
     <div class="rp-card">
 
-        <!-- CARD HEADER -->
+        <!-- HEADER -->
         <div class="rp-header">
             <div class="header-text">
                 <h2>Generate Report</h2>
@@ -59,38 +98,38 @@ if (isset($_SESSION['role'])) {
             </div>
         </div>
 
-        <!-- REPORT FILTERS -->
+        <!-- REPORT CONTROLS -->
         <div class="report-controls">
 
-            <!-- Report Type -->
+            <!-- Program Name -->
             <div class="form-field">
                 <label>Program Name</label>
                 <select id="reportType">
-    <option value="" disabled selected>Select Program</option>
-    <?php
-    $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+                    <option value="" disabled selected>Select Program</option>
+                    <?php
+                    $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
 
-    $sql = "SELECT DISTINCT program_name FROM aid_program";
-    $result = mysqli_query($conn, $sql);
+                    $sql = "SELECT DISTINCT program_name FROM aid_program";
+                    $result = mysqli_query($conn, $sql);
 
-    while ($row = mysqli_fetch_assoc($result)) {
-        echo "<option value='{$row['program_name']}'>{$row['program_name']}</option>";
-    }
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        echo "<option value='{$row['program_name']}'>{$row['program_name']}</option>";
+                    }
 
-    mysqli_close($conn);
-    ?>
-    </select>
-                </div>
-
-                <!-- Program -->
-                <div class="form-field">
-                    <label>Aid Type</label>
-                    <select id="program" disabled>
-        <option value="" disabled selected>Select Aid Type</option>
-    </select>
+                    mysqli_close($conn);
+                    ?>
+                </select>
             </div>
 
-            <!-- Generate Button -->
+            <!-- Aid Type -->
+            <div class="form-field">
+                <label>Aid Type</label>
+                <select id="program" disabled>
+                    <option value="" disabled selected>Select Aid Type</option>
+                </select>
+            </div>
+
+            <!-- BUTTON -->
             <div class="generate-wrapper">
                 <button class="generate-report">
                     Search Report
@@ -99,9 +138,8 @@ if (isset($_SESSION['role'])) {
 
         </div>
 
-        <!-- DOWNLOAD BUTTONS -->
+        <!-- DOWNLOAD -->
         <div class="download-section">
-
             <button class="download excel">
                 <i class="fa-solid fa-file-excel"></i> Download Excel
             </button>
@@ -109,86 +147,67 @@ if (isset($_SESSION['role'])) {
             <button class="download csv">
                 <i class="fa-solid fa-file-csv"></i> Download CSV
             </button>
-
         </div>
 
-    </div>
+        <!-- ======================= -->
+        <!-- PROGRAM DISTRIBUTION -->
+        <!-- ======================= -->
 
-    
-
-
-       <!-- PROGRAM-WISE DISTRIBUTION CARD -->
-<div class="rp-card program-distribution-card">
-
-    <!-- CARD HEADER -->
-    <div class="rp-header">
-        <div class="header-text">
-            <h2>Program-Wise Distribution</h2>
-            <p>Distribution statistics by aid program</p>
+        <div class="rp-header" style="margin-top:40px;">
         </div>
-    </div>
 
-    <!-- PROGRAM LIST WRAPPER -->
-    <div class="program-list-wrapper">
-        <div class="program-list">
-            <?php
-            $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-            if (!$conn) {
-                die("Connection failed: " . mysqli_connect_error());
-            }
+        <div class="program-list-wrapper">
+            <div class="program-list">
+                <?php
+                $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
 
-            $sql = "SELECT program_name, beneficiaries FROM aid_program ORDER BY id DESC";
-            $result = mysqli_query($conn, $sql);
+                $sql = "SELECT program_name, beneficiaries FROM aid_program ORDER BY id DESC";
+                $result = mysqli_query($conn, $sql);
 
-            $count = 0;
-            if ($result && mysqli_num_rows($result) > 0) {
+                $count = 0;
+
                 while ($row = mysqli_fetch_assoc($result)) {
                     $count++;
-
-                    // Only show first 3 items initially
                     $hiddenClass = $count > 3 ? "hidden-program" : "";
 
-                    echo "<div class='program-item'
-                    data-program='{$row['program_name']}'
-                    data-beneficiaries='{$row['beneficiaries']}'> 
+                    echo "<div class='program-item $hiddenClass'
+                        data-program='{$row['program_name']}'
+                        data-beneficiaries='{$row['beneficiaries']}'>
 
-                    <div class='program-text'>
-                        <div class='program-name'>{$row['program_name']}</div>
+                        <div class='program-text'>
+                            <div class='program-name'>{$row['program_name']}</div>
 
-                        <div class='program-details'>
-                            <span>{$row['beneficiaries']} unique beneficiaries</span>
-                            <span>Distributions: 0</span>
+                            <div class='program-details'>
+                                <span>{$row['beneficiaries']} unique beneficiaries</span>
+                                <span>Distributions: 0</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class='chart-wrapper'>
-                        <canvas class='mini-chart'></canvas>
-                    </div>
+                        <div class='chart-wrapper'>
+                            <canvas class='mini-chart'></canvas>
+                        </div>
 
-                    <div class='chart-legend'>
-                        <span class='legend-item remaining'>■ Remaining</span>
-                        <span class='legend-item claimed'>■ Claimed</span>
-                    </div>
+                        <div class='chart-legend'>
+                            <span class='legend-item remaining'>■ Remaining</span>
+                            <span class='legend-item claimed'>■ Claimed</span>
+                        </div>
 
-                </div>";
+                    </div>";
                 }
-            } else {
-                echo "<p style='text-align:center; color:#777;'>No program distribution data found.</p>";
-            }
 
-            mysqli_close($conn);
-            ?>
+                mysqli_close($conn);
+                ?>
+            </div>
         </div>
-    </div>
 
-    <!-- SEE MORE BUTTON OUTSIDE FADE -->
-    <?php if ($count > 3): ?>
-    <div class="see-more-btn-wrapper">
-        <button class="see-more-btn">See More</button>
-    </div>
-    <?php endif; ?>
+        <!-- SEE MORE -->
+        <?php if ($count > 3): ?>
+        <div class="see-more-btn-wrapper">
+            <button class="see-more-btn">See More</button>
+        </div>
+        <?php endif; ?>
 
-</div>
+    </div>
 
 
 </main>

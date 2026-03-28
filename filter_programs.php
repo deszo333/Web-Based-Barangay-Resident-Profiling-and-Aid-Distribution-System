@@ -34,26 +34,25 @@ if ($result && mysqli_num_rows($result) > 0) {
         $remaining = $beneficiaries - $distributed;
 
         echo "
-        <div class='program-item expanded-view'>
+<div class='program-item expanded-view'
+    data-beneficiaries='$beneficiaries'
+    data-distributed='0'>
 
-            <div class='program-name'>{$row['program_name']}</div>
+    <div class='program-name'>{$row['program_name']}</div>
 
-            <div class='program-details'>
-                <span><strong>Total:</strong> $beneficiaries</span>
-                <span><strong>Distributed:</strong> $distributed</span>
-            </div>
+    <div class='program-details'>
+        <span><strong>Total:</strong> $beneficiaries</span>
+        <span><strong>Distributed:</strong> 0</span>
+    </div>
 
-            <!-- FULL DETAILS (VISIBLE AFTER SEARCH) -->
-            <div class='program-expanded'>
-                <p><strong>Remaining:</strong> $remaining</p>
+    <!-- FULL DETAILS -->
+    <div class='program-expanded'>
+        <p><strong>Remaining:</strong> $remaining</p>
 
-                <canvas class='mini-chart'
-                    data-beneficiaries='$beneficiaries'
-                    data-distributed='$distributed'>
-                </canvas>
-            </div>
+        <canvas class='mini-chart'></canvas>
+    </div>
 
-        </div>";
+</div>";
     }
 } else {
     echo "<p style='text-align:center; color:#777;'>No matching data found.</p>";

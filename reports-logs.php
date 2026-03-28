@@ -19,7 +19,7 @@ if (isset($_SESSION['role'])) {
     <link rel="stylesheet" href="assets/css/reports-logs.css">
     <link rel="stylesheet" href="includes/sidebars.css">
     <link rel="stylesheet" href="fontawesome/fontawesome/css/all.css">
-    <script src="js/chart.umd.min.js"></script>
+    <script src="assets/js/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -148,20 +148,27 @@ if (isset($_SESSION['role'])) {
                     // Only show first 3 items initially
                     $hiddenClass = $count > 3 ? "hidden-program" : "";
 
-                    echo "<div class='program-item $hiddenClass'
+                    echo "<div class='program-item'
                     data-program='{$row['program_name']}'
-                    data-beneficiaries='{$row['beneficiaries']}'
-                    data-distributed='{$row['beneficiaries']}'>
+                    data-beneficiaries='{$row['beneficiaries']}'> 
 
-                    <div class='program-name'>{$row['program_name']}</div>
+                    <div class='program-text'>
+                        <div class='program-name'>{$row['program_name']}</div>
 
-                    <div class='program-details'>
-                        <span>{$row['beneficiaries']} unique beneficiaries</span>
-                        <span>Distributions: 0</span>
+                        <div class='program-details'>
+                            <span>{$row['beneficiaries']} unique beneficiaries</span>
+                            <span>Distributions: 0</span>
+                        </div>
                     </div>
 
-                    <!-- ADD THIS -->
-                    <canvas class='mini-chart'></canvas>
+                    <div class='chart-wrapper'>
+                        <canvas class='mini-chart'></canvas>
+                    </div>
+
+                    <div class='chart-legend'>
+                        <span class='legend-item remaining'>■ Remaining</span>
+                        <span class='legend-item claimed'>■ Claimed</span>
+                    </div>
 
                 </div>";
                 }
@@ -186,21 +193,6 @@ if (isset($_SESSION['role'])) {
 
 </main>
 
-<div id="programModal" class="modal-overlay">
-    <div class="modal-content">
-
-        <span class="close-modal">&times;</span>
-
-        <h2 id="modalProgramName"></h2>
-
-        <p><strong>Total Beneficiaries:</strong> <span id="modalBeneficiaries"></span></p>
-        <p><strong>Distributed:</strong> <span id="modalDistributed"></span></p>
-
-        <!-- Chart -->
-        <canvas id="programChart" width="300" height="300"></canvas>
-
-    </div>
-</div>
 
 <!-- Custom Popup -->
 <link rel="stylesheet" href="assets/popup/popup.css">

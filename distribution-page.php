@@ -48,123 +48,170 @@ if (isset($_SESSION['role'])) {
 
 <!-- MAIN CONTENT -->
 <main class="rp-dashboard">
-
+        
     <div class="rp-card">
+    <?php
+    $tab = $_GET['tab'] ?? 'start';
+    $search = $_GET['search'] ?? '';
+    ?>
 
-        <!-- UPPER PART -->
-        <div class="rp-header">
-            <div class="header-text">
-                <h2>Select Aid for Distribution</h2>
-                <p>Choose an aid program to start distribution</p>
-            </div>
+    <div class="rp-header">
+        <div class="header-text">
+            <h2>Select Aid for Distribution</h2>
+            <p>Choose an aid program to start distribution</p>
 
-            <div class="rp-actions">
-                <form method="GET">
-                    <input type="text" name="search" placeholder="Search aid programs..."
-                        value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-                </form>
+            <!-- TABS -->
+            <div class="tabs-container">
+
+                <a href="?tab=start&search=<?php echo urlencode($search); ?>" 
+                   class="tab <?= ($tab === 'start') ? 'active' : '' ?>">
+                   Start Distribution
+                </a>
+
+                <a href="?tab=locked&search=<?php echo urlencode($search); ?>" 
+                   class="tab <?= ($tab === 'locked') ? 'active' : '' ?>">
+                   Locked
+                </a>
+
+                <a href="?tab=completed&search=<?php echo urlencode($search); ?>" 
+                   class="tab <?= ($tab === 'completed') ? 'active' : '' ?>">
+                   Completed
+                </a>
+
+                <a href="?tab=all&search=<?php echo urlencode($search); ?>" 
+                   class="tab <?= ($tab === 'all') ? 'active' : '' ?>">
+                   All
+                </a>
+
             </div>
+        </div>    
+
+        <div class="rp-actions">
+            <form method="GET">
+                <input type="text" name="search" placeholder="Search aid programs..."
+                    value="<?php echo htmlspecialchars($search); ?>">
+
+                <input type="hidden" name="tab" value="<?php echo htmlspecialchars($tab); ?>">
+            </form>
         </div>
+    </div>
 
-        <!-- LOWER PART: AID CARDS -->
-        <div class="distribution-grid">
+    <!-- LOWER PART: AID CARDS -->
+    <div class="distribution-grid">
 
-        <?php
-        $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-        if (!$conn) {
-            die("Connection failed: " . mysqli_connect_error());
-        }
+    <?php
+    $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+    if (!$conn) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
 
-        $search = trim($_GET['search'] ?? '');
-        $whereConditions = ["status = 'Active'"];
+    $search = trim($_GET['search'] ?? '');
+    $tab = $_GET['tab'] ?? 'start';
 
-        if ($search !== "") {
-            $searchEscaped = mysqli_real_escape_string($conn, $search);
-            $whereConditions[] = "(program_name LIKE '%$searchEscaped%' 
-                                  OR aid_type LIKE '%$searchEscaped%')";
-        }
+    $today = date("Y-m-d");
 
-        $whereSQL = "WHERE " . implode(" AND ", $whereConditions);
+    $whereConditions = [];
 
-        $today = date("Y-m-d");
+    // SEARCH FILTER
+    if ($search !== "") {
+        $searchEscaped = mysqli_real_escape_string($conn, $search);
+        $whereConditions[] = "(program_name LIKE '%$searchEscaped%' 
+                              OR aid_type LIKE '%$searchEscaped%')";
+    }
 
-        // Sort by relative date: Today → Future → Past
-        $sql = "SELECT *,
-                CASE
-                    WHEN date_scheduled = '$today' THEN 1
-                    WHEN date_scheduled > '$today' THEN 2
-                    ELSE 3
-                END AS display_order
-                FROM aid_program
-                $whereSQL
-                ORDER BY display_order ASC, date_scheduled ASC";
+    // TAB FILTER
+    if ($tab === 'start') {
+        $whereConditions[] = "date_scheduled = '$today'";
+    } 
+    elseif ($tab === 'locked') {
+        $whereConditions[] = "date_scheduled > '$today'";
+    } 
+    elseif ($tab === 'completed') {
+        $whereConditions[] = "date_scheduled < '$today'";
+    }
+    // all = no filter
 
-        $result = mysqli_query($conn, $sql);
+    $whereSQL = count($whereConditions) > 0
+        ? "WHERE " . implode(" AND ", $whereConditions)
+        : "";
 
-        if ($result && mysqli_num_rows($result) > 0) {
+    // ORDERING (keeps your logic)
+    $sql = "SELECT *,
+            CASE
+                WHEN date_scheduled = '$today' THEN 1
+                WHEN date_scheduled > '$today' THEN 2
+                ELSE 3
+            END AS display_order
+            FROM aid_program
+            $whereSQL
+            ORDER BY display_order ASC, date_scheduled ASC";
 
-            while ($row = mysqli_fetch_assoc($result)) {
+    $result = mysqli_query($conn, $sql);
 
-                $dateScheduled = $row['date_scheduled'];
+    if ($result && mysqli_num_rows($result) > 0) {
 
-                // BUTTON LOGIC
-                if ($dateScheduled == $today) {
-                    $btnText = "Start Distribution";
-                    $btnClass = "btn-start";
-                    $btnLink = "start-distribution.php?program_id={$row['id']}";
-                } elseif ($dateScheduled < $today) {
-                    $btnText = "Complete";
-                    $btnClass = "btn-complete";
-                    $btnLink = "#";
-                } else {
-                    $btnText = "Locked";
-                    $btnClass = "btn-locked";
-                    $btnLink = "#";
-                }
+        while ($row = mysqli_fetch_assoc($result)) {
 
-                echo "
-                <div class='distribution-card'>
+            $dateScheduled = $row['date_scheduled'];
 
-                    <div class='card-top'>
-                        <h3>{$row['program_name']}</h3>
-                        <span class='status-badge active'>{$row['status']}</span>
-                    </div>
-
-                    <div class='card-body'>
-                        <div class='info-row'>
-                            <span class='label'>Type</span>
-                            <span class='value'>{$row['aid_type']}</span>
-                        </div>
-
-                        <div class='info-row'>
-                            <span class='label'>Date</span>
-                            <span class='value'>{$row['date_scheduled']}</span>
-                        </div>
-
-                        <div class='info-row'>
-                            <span class='label'>Beneficiaries</span>
-                            <span class='value'>{$row['beneficiaries']}</span>
-                        </div>
-                    </div>
-
-                    <div class='card-footer'>
-                        <a href='{$btnLink}' class='start-btn {$btnClass}'>
-                            {$btnText}
-                        </a>
-                    </div>
-
-                </div>
-                ";
+            // BUTTON LOGIC
+            if ($dateScheduled == $today) {
+                $btnText = "Start Distribution";
+                $btnClass = "btn-start";
+                $btnLink = "start-distribution.php?program_id={$row['id']}";
+            } elseif ($dateScheduled < $today) {
+                $btnText = "Completed";
+                $btnClass = "btn-complete";
+                $btnLink = "#";
+            } else {
+                $btnText = "Locked";
+                $btnClass = "btn-locked";
+                $btnLink = "#";
             }
 
-        } else {
-            echo "<p>No active aid programs available.</p>";
+            echo "
+            <div class='distribution-card'>
+
+                <div class='card-top'>
+                    <h3>{$row['program_name']}</h3>
+                    <span class='status-badge active'>{$row['status']}</span>
+                </div>
+
+                <div class='card-body'>
+                    <div class='info-row'>
+                        <span class='label'>Type</span>
+                        <span class='value'>{$row['aid_type']}</span>
+                    </div>
+
+                    <div class='info-row'>
+                        <span class='label'>Date</span>
+                        <span class='value'>{$row['date_scheduled']}</span>
+                    </div>
+
+                    <div class='info-row'>
+                        <span class='label'>Beneficiaries</span>
+                        <span class='value'>{$row['beneficiaries']}</span>
+                    </div>
+                </div>
+
+                <div class='card-footer'>
+                    <a href='{$btnLink}' class='start-btn {$btnClass}'>
+                        {$btnText}
+                    </a>
+                </div>
+
+            </div>
+            ";
         }
 
-        mysqli_close($conn);
-        ?>
+    } else {
+        echo "<p>No aid programs found.</p>";
+    }
 
-        </div>
+    mysqli_close($conn);
+    ?>
+
+    </div>
 
     </div>
 

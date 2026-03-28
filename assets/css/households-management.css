@@ -917,13 +917,14 @@ body {
 }
 
 .inner-members-table th {
-    background: #e2e8f0;
+    background: #fff;
     padding: 8px 12px;
     text-align: left;
     font-weight: 600;
     color: #334155;
     position: sticky;
     top: 0;
+    border-bottom: 2px solid #cbd5e1;
 }
 
 .inner-members-table td {
@@ -1015,4 +1016,51 @@ body {
 
 .picker-action i {
     pointer-events: none; 
+}
+
+/* ===============================
+   PICKER TRANSFER UI (CLEAN LOOK)
+================================ */
+.role-badge { 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-size: 11px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px; 
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+}
+
+.picker-action { 
+    background: #fff; 
+    color: #000;
+    border: 1px solid #cbd5e1;
+}
+.picker-action:hover { 
+    background: #000; 
+    color: #fff;
+    border-color: #000;
+}
+
+.picker-action.selected-state { 
+    background: #000 !important;
+    color: #fff !important; 
+    border-color: #000 !important;
+}
+
+/* ===============================
+   CRITICAL Z-INDEX FIX (BULLETPROOF)
+================================ */
+#popup-container {
+    position: relative !important;
+    z-index: 999999 !important;
+}
+
+#popup-container > div,
+.popup-overlay,
+.custom-popup,
+.toast-overlay {
+    z-index: 999999 !important;
 }

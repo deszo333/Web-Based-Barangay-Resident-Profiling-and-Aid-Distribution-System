@@ -261,96 +261,94 @@ if (isset($_SESSION['role'])) {
     <div class="resident-modal-content">
         <div class="modal-header">
             <div class="modal-title">
-                <i class="fa-solid fa-house" id="modalIcon"></i>
-                <h3 id="modalTitle">Add New Household</h3>
+                <i class="fa-solid fa-user-plus" id="modalIcon"></i>
+                <h3 id="modalTitle">Add New Resident</h3>
             </div>
             <span class="close-btn" id="closeModal">&times;</span>
         </div>
         
         <form id="addResidentForm" class="resident-form-grid">
             <input type="hidden" name="resident_id" id="resident_id">
-            <!-- store the current version after writing to database -->
             <input type="hidden" name="version" id="resident_version">
 
-            <!-- ROW 1 -->
             <div class="form-row three">
                 <div class="form-field">
-                    <label>First Name</label>
-                    <input type="text" name="first_name" placeholder="First Name" required>
+                    <label>First Name <span style="color:red;">*</span></label>
+                    <input type="text" name="first_name" class="capitalize-name" placeholder="First Name" required>
                 </div>
-
                 <div class="form-field">
                     <label>Middle Name</label>
-                    <input type="text" name="middle_name" placeholder="Middle Name">
+                    <input type="text" name="middle_name" class="capitalize-name" placeholder="Middle Name">
                 </div>
-
                 <div class="form-field">
-                    <label>Last Name</label>
-                    <input type="text" name="last_name" placeholder="Last Name" required>
+                    <label>Last Name <span style="color:red;">*</span></label>
+                    <input type="text" name="last_name" class="capitalize-name" placeholder="Last Name" required>
                 </div>
             </div>
 
-            <!-- ROW 2 -->
             <div class="form-row one">
                 <div class="form-field">
-                <label>Address</label>
-                <input type="text" name="address" placeholder="Address">
+                    <label>Address <span style="color:red;">*</span></label>
+                    <input type="text" name="address" class="capitalize-name" placeholder="e.g., Block 5, Lot 12, Abangan Norte" required>
                 </div>
             </div>
 
             <div class="form-row three">
-                    <div class="form-field">
-                    <label>Birthdate</label>
-                    <input type="date" name="birthdate" placeholder="Birthdate">
-                    </div>
-
-                    <div class="form-field">
+                <div class="form-field">
+                    <label>Birthdate <span style="color:red;">*</span></label>
+                    <input type="date" name="birthdate" required max="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="form-field">
                     <label>Age</label>
-                    <input type="number" name="age" placeholder="Age" readonly>
-                    </div>
-
-                    <div class="form-field">
-                    <label>Gender</label>
+                    <input type="number" name="age" placeholder="Auto-Calculated" readonly style= cursor: not-allowed;>
+                </div>
+                <div class="form-field">
+                    <label>Gender <span style="color:red;">*</span></label>
                     <select name="gender" required>
                         <option value="" disabled selected>Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
-                    </div>          
+                </div>          
             </div>
 
-            <div class="form-row one">
+            <div class="form-row three">
                 <div class="form-field">
-                    <label>Civil Status</label>
+                    <label>Civil Status <span style="color:red;">*</span></label>
                     <select name="civil_status" required>
-                        <option value="" disabled selected>Select Civil Status</option>
+                        <option value="" disabled selected>Select Status</option>
                         <option value="Single">Single</option>
                         <option value="Married">Married</option>
                         <option value="Widowed">Widowed</option>
                         <option value="Divorced">Divorced</option>
                     </select>
-                    </div>
-            </div>
-
-            <!-- ROW 4 -->
-            <div class="form-row three">
-                <div class="form-field">
-                <label>Occupation</label>
-                <input type="text" name="occupation" placeholder="Occupation">
                 </div>
-                
                 <div class="form-field">
-                <label>Contact</label>
-                <input type="tel" name="contact" placeholder="Contact Number" maxlength="11" inputmode="numeric">
+                    <label>Occupation</label>
+                    <input type="text" name="occupation" class="capitalize-name" placeholder="Occupation">
                 </div>
-
                 <div class="form-field">
-                <label>Voters Registration Number</label>
-                <input type="text" name="voters_registration_no" placeholder="Voters Registration Number">
+                    <label>Contact</label>
+                    <input type="tel" name="contact" id="contactInput" placeholder="09xxxxxxxxx" maxlength="11" inputmode="numeric">
                 </div>
             </div>
 
-            <button type="submit">Save Resident</button>
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                <div class="form-field">
+                    <label>Registered Voter? <span style="color:red;">*</span></label>
+                    <select id="voterStatus" required>
+                        <option value="" disabled selected>Select Status</option>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label style="color:#666; font-weight:normal;">Optional if Yes <span style="font-size:12px;"></span></label>
+                    <input type="text" name="voters_registration_no" id="voterIdInput" placeholder="Enter Voter ID Number" style="display: none; background-color: #fff;">
+                </div>
+            </div>
+
+            <button type="submit" style="margin-top: 20px;">Save Resident</button>
         </form>
     </div>
 </div>

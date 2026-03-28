@@ -56,6 +56,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* =========================
+       SMART FORM FEATURES
+    ========================= */
+    
+    // Voter ID Field
+    const voterStatus = document.getElementById("voterStatus");
+    const voterIdInput = document.getElementById("voterIdInput");
+
+    if (voterStatus && voterIdInput) {
+        voterStatus.addEventListener("change", function() {
+            if (this.value === "Yes") {
+                voterIdInput.style.display = "block";
+                voterIdInput.required = false;
+                voterIdInput.value = ""; 
+            } else {
+                voterIdInput.style.display = "none";
+                voterIdInput.required = false;
+                voterIdInput.value = "Not Registered"; 
+            }
+        });
+    }
+
+    // capitalize names
+    const nameInputs = document.querySelectorAll(".capitalize-name");
+    nameInputs.forEach(input => {
+        input.addEventListener("input", function() {
+            let words = this.value.split(" ");
+            for (let i = 0; i < words.length; i++) {
+                if (words[i].length > 0) {
+                    words[i] = words[i][0].toUpperCase() + words[i].substr(1).toLowerCase();
+                }
+            }
+            this.value = words.join(" ");
+        });
+    });
+
+    // contact number format
+    const contactInput = document.getElementById("contactInput");
+    if (contactInput) {
+        contactInput.addEventListener("input", function(e) {
+            
+            this.value = this.value.replace(/\D/g, '');
+            
+            
+            if (this.value.length >= 2 && !this.value.startsWith('09')) {
+                this.value = '09' + this.value.substring(2);
+            }
+        });
+    }
+
+    /* =========================
    AJAX SEARCH
 ========================= */
 
@@ -508,9 +558,24 @@ if (form) {
         if (form.gender) form.gender.value = editBtn.dataset.gender;
         if (form.civil_status) form.civil_status.value = editBtn.dataset.civil;
         if (form.occupation) form.occupation.value = editBtn.dataset.occupation;
-        if (form.voters_registration_no) form.voters_registration_no.value = editBtn.dataset.voters;
         if (form.contact) form.contact.value = editBtn.dataset.contact;
 
+        // Smart Voter ID Population
+        if (form.voters_registration_no) {
+            const voterVal = editBtn.dataset.voters;
+            const statusDropdown = document.getElementById("voterStatus");
+            const idInput = document.getElementById("voterIdInput");
+            
+            if (voterVal && voterVal !== "Not Registered") {
+                statusDropdown.value = "Yes";
+                idInput.style.display = "block";
+                idInput.value = voterVal;
+            } else {
+                statusDropdown.value = "No";
+                idInput.style.display = "none";
+                idInput.value = "Not Registered";
+            }
+        }
 
         // occ map the version to form
         if (form.version) form.version.value = editBtn.dataset.version;

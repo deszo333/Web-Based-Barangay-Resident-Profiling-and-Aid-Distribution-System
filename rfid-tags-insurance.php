@@ -160,13 +160,17 @@ if (isset($_SESSION['role'])) {
                     FROM rfid_tags rt
                     JOIN registered_household h ON rt.household_id = h.id
                     LEFT JOIN registered_resi head ON h.head_of_family_id = head.id
-                    WHERE 1=1 
+                    WHERE h.is_archived = 0 
                 ";
 
                 // Filter by status if not "all"
                 if ($status !== 'all') {
-                    $status_safe = mysqli_real_escape_string($conn, $status);
-                    $query .= " AND rt.status = '$status_safe' ";
+                    if ($status === 'Inactive') {
+                        $query .= " AND rt.status != 'Active' ";
+                    } else {
+                        $status_safe = mysqli_real_escape_string($conn, $status);
+                        $query .= " AND rt.status = '$status_safe' ";
+                    }
                 }
 
                 // Filter by search against normalized tables
@@ -186,6 +190,10 @@ if (isset($_SESSION['role'])) {
 
                 if ($result && mysqli_num_rows($result) > 0):
                     while ($row = mysqli_fetch_assoc($result)):
+                        
+                        $is_active = ($row['status'] === 'Active');
+                        $display_status = $is_active ? 'Active' : 'Inactive';
+                        $status_class = $is_active ? 'active' : 'inactive';
                 ?>
                 <tr data-id="<?= $row['rfid_id'] ?>">
                     <td><?= htmlspecialchars($row['rfid_number']) ?></td>
@@ -193,12 +201,12 @@ if (isset($_SESSION['role'])) {
                     <td><?= htmlspecialchars($row['head_of_family']) ?></td>
                     <td><?= date("M d, Y", strtotime($row['date_issued'])) ?></td>
                     <td>
-                        <span class="status <?= $row['status'] === 'Active' ? 'active' : 'inactive' ?>">
-                            <?= htmlspecialchars($row['status']) ?>
+                        <span class="status <?= $status_class ?>">
+                            <?= $display_status ?>
                         </span>
                     </td>
                     <td>
-                        <?php if ($row['status'] === 'Active'): ?>
+                        <?php if ($is_active): ?>
                             <button class="deactivate-btn" data-id="<?= $row['rfid_id'] ?>">Deactivate</button>
                         <?php else: ?>
                             <button class="activate-btn" data-id="<?= $row['rfid_id'] ?>">Activate</button>
@@ -211,8 +219,7 @@ if (isset($_SESSION['role'])) {
                             data-rfid="<?= htmlspecialchars($row['rfid_number']) ?>"
                             data-householdid="<?= $row['household_id'] ?>"
                         >Edit</button>
-                        <button class="delete" data-id="<?= $row['rfid_id'] ?>">Delete</button>
-                    </td>
+                        </td>
                 </tr>
                 <?php
                     endwhile;

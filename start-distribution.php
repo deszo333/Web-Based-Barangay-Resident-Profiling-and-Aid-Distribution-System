@@ -114,16 +114,31 @@ if ($program_id > 0) {
         </div>
 
         <!-- RIGHT SIDE -->
-
-
         <div class="right-section">
-            <div class="transaction-card">
-                <h3>Recent Transaction</h3>
-
-                <ul class="transaction-list" id="recentTransactionsList">
-                </ul>
-
+            
+            <div class="progress-card">
+                <h3>Distribution Progress</h3>
+                <div class="progress-stats">
+                    <span id="progClaimed">0</span> / <span id="progTarget">0</span> Distributed
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
             </div>
+
+            <div class="lists-container">
+                <div class="transaction-card single-view">
+                <div class="card-header-flex">
+                    <h3 style="color: #ffffff; margin-bottom: 0;">
+                        <i style="color:#14AE5C;"></i> Recent Claims
+                    </h3>
+                    <a href="reports-logs.php?program_id=<?php echo $program_id; ?>" class="view-report-btn">
+                        <i class="fa-solid fa-file-lines"></i> View Report
+                    </a>
+                </div>
+                <ul class="transaction-list claimed-list" id="recentTransactionsList"></ul>
+            </div>
+
         </div>
 
         
@@ -190,32 +205,47 @@ document.addEventListener("DOMContentLoaded", () => {
     // load immed the recent transactions
     function loadRecentTransactions() {
         if (currentProgramId === 0) return;
-
+        
         fetch(`fetch_recent_transactions.php?program_id=${currentProgramId}`)
         .then(res => res.json())
         .then(data => {
-            const ul = document.getElementById("recentTransactionsList");
-            ul.innerHTML = ""; 
+            if (data.status === "success") {
+                // 1. Update Progress Bar
+                document.getElementById("progTarget").textContent = data.target;
+                document.getElementById("progClaimed").textContent = data.claimed;
+                
+                let percent = 0;
+                if (data.target > 0) {
+                    percent = Math.min((data.claimed / data.target) * 100, 100);
+                }
+                document.getElementById("progressBarFill").style.width = percent + "%";
+                
 
-            if (data.status === "success" && data.data.length > 0) {
+                // 3. Render Claimed List
+                const claimedUl = document.getElementById("recentTransactionsList");
+                claimedUl.innerHTML = "";
+                if (data.recent.length > 0) {
+                    data.recent.forEach(txn => {
+                        claimedUl.innerHTML += `<li><strong>${txn.household_number}</strong> - ${txn.head_of_family} <br> <span style="font-size: 11px; color: #f7f7f7;">${txn.formatted_date}</span></li>`;
+                    });
+                } else {
+                    claimedUl.innerHTML = `<li style='text-align:center; background:transparent; border:none; color:#9cb1c4;'>No claims yet.</li>`;
+                }
 
-                data.data.forEach(txn => {
-                    ul.innerHTML += `<li><strong>${txn.head_of_family}</strong> <br> <span style="font-size: 12px; color: #white;">${txn.formatted_date}</span></li>`;
-                });
-            } else {
-
-                ul.innerHTML = `<li id='no-transactions' style='text-align:center; color:#white; background:transparent;'>No recent transactions yet.</li>`;
             }
         })
-        .catch(err => console.error("Error loading transactions:", err));
+        .catch(err => console.error("Error loading stats:", err));
     }
 
     loadRecentTransactions();
     
-
     if (currentProgramId === 0) {
-        alert("error no program selected");
-        scanBtn.disabled = true; // actual program validation
+        Popup.open({
+            title: "Configuration Error", 
+            message: "No aid program was selected. Please go back and select a program to begin distribution.", 
+            type: "danger"
+        });
+        if(scanBtn) scanBtn.style.pointerEvents = "none";
     }
 
 
@@ -262,7 +292,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 showModal(data.household, data.claimed);
                 } else 
             {
-                alert(data.message);
+                Popup.open({ 
+                    title: "Scan Rejected", 
+                    message: data.message, 
+                    type: "danger" 
+                });
                 rfidInput.value = "";
             }
         })
@@ -310,32 +344,33 @@ document.addEventListener("DOMContentLoaded", () => {
             //create card after confirming
             .then(data => {
                 if (data.status === "success") {
-                    alert("Aid successfully recorded for " + data.head_of_family);
+                    Popup.open({ 
+                        title: "Aid Claimed!", 
+                        message: `Aid successfully recorded for <b>${data.head_of_family}</b>.`, 
+                        type: "success" 
+                    });
                     closeModal();
+                    loadRecentTransactions();
                     
                     const ul = document.getElementById("recentTransactionsList");
                     const noTransMsg = document.getElementById("no-transactions");
-
-                    if (noTransMsg) {
-                        ul.innerHTML = ""; 
-                    }   
-                    //generate time
+                    if (noTransMsg) ul.innerHTML = "";
+                    
                     const now = new Date();
                     const timeString = now.toLocaleDateString('en-US', { 
                         month: 'short', day: 'numeric', year: 'numeric', 
                         hour: 'numeric', minute: '2-digit', hour12: true 
                     });
-
-
+                    
                     const newLi = `<li><strong>${data.head_of_family}</strong> <br> <span style="font-size: 12px; color: #9cb1c4;">${timeString}</span></li>`;
-
-                    
                     ul.innerHTML = newLi + ul.innerHTML;
-
-                    rfidInput.value = ""; 
-                    
+                    rfidInput.value = "";
                 } else {
-                    alert(data.message);
+                    Popup.open({ 
+                        title: "Transaction Failed", 
+                        message: data.message, 
+                        type: "danger" 
+                    });
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = "Confirm & Log Aid";
                 }

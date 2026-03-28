@@ -299,6 +299,7 @@ body {
     border-radius: 10px;
     z-index: 101;
     opacity: 0;
+    pointer-events: none;
     transition: all 0.3s ease;
 }
 
@@ -338,6 +339,7 @@ body {
 /* SHOW STATE */
 .resident-modal.show {
     opacity: 1;
+    pointer-events: auto;
     transform: translate(-50%, -50%) scale(1);
 }
 

@@ -280,14 +280,23 @@ body {
     cursor: pointer;
 }
 
-.status-badge{
-    background-color: #000;
-    color: #fff;
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+.status-badge {
+    padding: 4px 10px;
     border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    border: none;
+}
+
+.badge-active {
+    background-color: #16a34a;
+    color: #fff;
+}
+
+.badge-inactive {
+    background-color: #9c2828;
+    color: #fff;
 }
 
 
@@ -339,4 +348,42 @@ body {
         padding: 6px 10px;
         font-size: 13px;
     }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+.program-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-row {
+    display: grid;
+    gap: 15px;
+}
+
+.form-row.two {
+    grid-template-columns: 1fr 1fr;
+}
+
+.form-row.one {
+    grid-template-columns: 1fr;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-field label {
+    margin-top: 0;
+    margin-bottom: 5px;
 }

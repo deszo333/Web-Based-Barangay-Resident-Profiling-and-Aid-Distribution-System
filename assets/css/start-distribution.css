@@ -356,3 +356,80 @@ body {
     background: #959595;
     cursor: not-allowed;
 }
+
+/* ===============================
+   PROGRESS & TRACKER UI
+================================ */
+.progress-card { 
+    background: #082A48; 
+    border-radius: 14px; 
+    padding: 20px; 
+    color: #fff; 
+    margin-bottom: 20px; 
+}
+.progress-stats { 
+    font-size: 18px; 
+    font-weight: 700; 
+    margin-bottom: 12px; 
+    color: #FFCC00; 
+}
+.progress-bar-container { 
+    width: 100%; 
+    background: #144876; 
+    height: 14px; 
+    border-radius: 7px; 
+    overflow: hidden; 
+}
+.progress-bar-fill { 
+    height: 100%; 
+    background: #14AE5C; 
+    width: 0%; 
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+/* Split view for the lists */
+/* ===============================
+   SINGLE LIST TRACKER UI
+================================ */
+.transaction-card.single-view {
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.view-report-btn {
+    background: #14AE5C;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.view-report-btn:hover {
+    background: #11964f;
+}
+
+/* Color-coded list items */
+.claimed-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+.claimed-list li { 
+    border-left: 4px solid #14AE5C; 
+}
+
+/* Custom Scrollbar for lists */
+.claimed-list::-webkit-scrollbar { width: 6px; }
+.claimed-list::-webkit-scrollbar-track { background: #082A48; }
+.claimed-list::-webkit-scrollbar-thumb { background: #144876; border-radius: 4px; }

@@ -331,13 +331,27 @@ if (searchInput) {
                 .then(res => res.text())
                 .then(data => {
                     if (data.trim() === 'success') {
-                        location.reload();
+                        Popup.open({
+                            title: "Success",
+                            message: isUpdate ? "Household updated successfully!" : "Household added successfully!",
+                            type: "success",
+                            onOk: () => {
+                                location.reload();
+                            }
+                        });
                     } else if (data.trim() === 'conflict') {
                         // === OCC CONFLICT HANDLER ===
                         Popup.open({
                             title: "Update Conflict",
                             message: "Data changed! Another staff member updated this household while you were viewing it. Please refresh and try again.",
                             type: "danger"
+                        });
+                    } else if (data.trim().startsWith('head_conflict:')) {
+                        const conflictingHousehold = data.trim().split(':')[1];
+                        Popup.open({
+                            title: "Duplicate Head of Family",
+                            message: `This resident is already assigned as the Head of Family for <b>${conflictingHousehold}</b>.<br><br>To prevent missing data, please select a different Head, or reassign ${conflictingHousehold} first.`,
+                            type: "warning"
                         });
                     } else {
                         Popup.open({
@@ -477,39 +491,73 @@ if (searchInput) {
             const id = pickerBtn.dataset.id;
             const name = pickerBtn.dataset.name.trim();
             const address = pickerBtn.dataset.address;
+            const hhNum = pickerBtn.dataset.hhnum;
+            const role = pickerBtn.dataset.role;
 
-            if (pickerMode === "head") {
-                if (headInput) headInput.value = name;
-                if (headIdInput) headIdInput.value = id;
-                if (addressInput) addressInput.value = address;
-                
-                tempSelectedMembers = tempSelectedMembers.filter(m => m.id !== id);
-                if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
-                if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
-                renderMembersTable();
-                
-                togglePicker(false);
-            } 
-            else if (pickerMode === "members") {
-                const existingIndex = tempSelectedMembers.findIndex(m => m.id === id);
-                
-                if (existingIndex > -1) {
-                    tempSelectedMembers.splice(existingIndex, 1);
-                    pickerBtn.classList.remove("selected-state");
-                    pickerBtn.innerHTML = `Select`;
-                } else {
-                    tempSelectedMembers.push({ id: id, name: name });
-                    pickerBtn.classList.add("selected-state");
-                    pickerBtn.innerHTML = `<i class="fa-solid fa-check"></i> Selected`;
+            const executeSelection = () => {
+                if (pickerMode === "head") {
+                    if (headInput) headInput.value = name;
+                    if (headIdInput) headIdInput.value = id;
+                    if (addressInput && address) addressInput.value = address;
+                    
+                    tempSelectedMembers = tempSelectedMembers.filter(m => m.id !== id);
+                    if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
+                    if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
+                    renderMembersTable();
+                    
+                    togglePicker(false);
+                } 
+                else if (pickerMode === "members") {
+                    if (headIdInput && headIdInput.value === id) {
+                        Popup.open({ title: "Invalid", message: "The Head of Family cannot also be a member.", type: "warning" });
+                        return;
+                    }
+
+                    const existingIndex = tempSelectedMembers.findIndex(m => m.id === id);
+                    if (existingIndex > -1) {
+                        tempSelectedMembers.splice(existingIndex, 1);
+                        pickerBtn.classList.remove("selected-state");
+                        pickerBtn.innerHTML = role === "Available" ? `Select` : `Transfer`;
+                    } else {
+                        tempSelectedMembers.push({ id: id, name: name });
+                        pickerBtn.classList.add("selected-state");
+                        pickerBtn.innerHTML = `<i class="fa-solid fa-check"></i> Selected`;
+                    }
+                    
+                    if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
+                    if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
+                    renderMembersTable();
+                    
+                    const countText = document.getElementById("pickerCount");
+                    if (countText) countText.innerText = tempSelectedMembers.length;
                 }
+            };
+
+            if (role !== "Available" && !pickerBtn.classList.contains("selected-state")) {
                 
-                // now it gets the actual id of the resident not string 
-                if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
-                if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
-                renderMembersTable();
-                
-                const countText = document.getElementById("pickerCount");
-                if (countText) countText.innerText = tempSelectedMembers.length;
+                if (role === "HEAD") {
+                    Popup.open({
+                        title: "Action Blocked",
+                        message: `This resident is actively the Head of Family for <b>${hhNum}</b>.<br><br>To prevent orphaned households, you cannot transfer an active Head. Please edit ${hhNum} and assign a new head there first before moving this resident.`,
+                        type: "danger"
+                    });
+                    return;
+                }
+
+                if (role === "MEMBER") {
+                    Popup.open({
+                        title: "Transfer Resident?",
+                        message: `This resident is currently assigned as a Member of <b>${hhNum}</b>.<br><br>Do you want to transfer them to this new household?`,
+                        type: "warning",
+                        onOk: () => {
+                            executeSelection();
+                        }
+                    });
+                    return;
+                }
+
+            } else {
+                executeSelection();
             }
             return;
         }

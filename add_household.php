@@ -18,6 +18,34 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         exit;
     }
 
+    $head_id = $_POST['head_of_family_id'];
+    $current_household_id = isset($_POST['resident_id']) ? $_POST['resident_id'] : 0;
+
+    $check_head_sql = "SELECT household_number FROM registered_household WHERE head_of_family_id = ? AND is_archived = 0";
+    
+    if (!empty($current_household_id)) {
+        $check_head_sql .= " AND id != ?";
+    }
+
+    $stmt_check = mysqli_prepare($conn, $check_head_sql);
+    
+    if (!empty($current_household_id)) {
+        mysqli_stmt_bind_param($stmt_check, "ii", $head_id, $current_household_id);
+    } else {
+        mysqli_stmt_bind_param($stmt_check, "i", $head_id);
+    }
+
+    mysqli_stmt_execute($stmt_check);
+    $check_result = mysqli_stmt_get_result($stmt_check);
+
+    if ($row = mysqli_fetch_assoc($check_result)) {
+        echo "head_conflict:" . $row['household_number'];
+        mysqli_stmt_close($stmt_check);
+        mysqli_close($conn);
+        exit;
+    }
+    mysqli_stmt_close($stmt_check);
+
     // Convert member IDs to array and ensure Head is included
     $member_ids = array_filter(array_map('intval', explode(',', $household_member_ids)));
     if (!in_array((int)$head_of_family_id, $member_ids)) {

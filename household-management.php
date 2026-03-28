@@ -249,17 +249,22 @@ if (isset($_SESSION['role'])) {
     <input type="hidden" id="headIdInput" name="head_of_family_id">
     <input type="hidden" id="membersIdInput" name="household_member_ids">
 
-    <!-- ROW 1 -->
     <div class="form-row two-col">
         <div class="form-group">
             <label>Household Number</label>
-            <input type="text" name="household_number" readonly style="background-color: #f8fafc; cursor: not-allowed; color: #64748b;">
+            <input type="text" name="household_number" readonly style="background-color: #fff; border: 1px solid #cbd5e1; cursor: not-allowed; font-weight: bold; color: #333;">
         </div>
 
         <div class="form-group head-picker">
-            <label>Head of Family</label>
-            <input type="text" name="head_of_family" id="headInput"
-                   autocomplete="off" required>
+            <label>Head of Family <span style="color:red;">*</span></label>
+            <input type="text" name="head_of_family" id="headInput" placeholder="Click to select..." style="cursor: pointer; background-color: #fff;" autocomplete="off" required readonly>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Address <span style="color:red;">*</span></label>
+            <input type="text" name="address" required style="text-transform: capitalize;" placeholder="Enter complete address">
         </div>
     </div>
 
@@ -269,44 +274,66 @@ if (isset($_SESSION['role'])) {
             <thead>
                 <tr>
                     <th colspan="3">
-                        <input type="text" id="memberSearch"
-                               placeholder="Search resident...">
+                        <input type="text" id="memberSearch" placeholder="Search resident...">
                     </th>
                 </tr>
                 <tr>
                     <th>Name</th>
-                    <th>Address</th>
-                    <th style="width:90px;">Action</th>
+                    <th>Status</th>
+                    <th style="width:110px;">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
+                
                 $res = mysqli_query($conn, "
-                    SELECT id, first_name, middle_name, last_name, address
-                    FROM registered_resi WHERE is_archived = 0
-                    ORDER BY last_name
+                    SELECT r.id, r.first_name, r.middle_name, r.last_name, r.address,
+                           r.household_id, h.household_number, h.head_of_family_id
+                    FROM registered_resi r
+                    LEFT JOIN registered_household h ON r.household_id = h.id
+                    WHERE r.is_archived = 0 ORDER BY r.last_name
                 ");
 
                 while ($r = mysqli_fetch_assoc($res)) {
-                    $fullName = trim(
-                        $r['first_name'] . ' ' .
-                        $r['middle_name'] . ' ' .
-                        $r['last_name']
-                    );
+                    $fullName = trim($r['first_name'] . ' ' . $r['middle_name'] . ' ' . $r['last_name']);
                     $address = htmlspecialchars($r['address']);
+                    $hId = $r['household_id'] ? $r['household_id'] : ""; 
+                    $hhNum = $r['household_number'] ? $r['household_number'] : "";
+                    
+                    $isHead = ($r['head_of_family_id'] == $r['id']) ? true : false;
+                    
+                    $role = "Available";
+                    $statusBadge = "<span class='role-badge'>Available</span>";
+                    $btnText = "Select";
+                    $btnClass = "picker-action";
+
+                    if ($hhNum !== "") {
+                        if ($isHead) {
+                            $role = "HEAD";
+                            $statusBadge = "<span class='role-badge'>Head of {$hhNum}</span>";
+                            $btnText = "Locked";
+                            $btnClass = "picker-action";
+                        } else {
+                            $role = "MEMBER";
+                            $statusBadge = "<span class='role-badge'>Member of {$hhNum}</span>";
+                            $btnText = "Transfer";
+                            $btnClass = "picker-action";
+                        }
+                    }
 
                     echo "
                     <tr>
-                        <td>{$fullName}</td>
-                        <td>{$address}</td>
+                        <td style='font-weight: 500;'>{$fullName}</td>
+                        <td>{$statusBadge}</td>
                         <td>
-                            <button type='button'
-                                class='picker-action'
+                            <button type='button' class='{$btnClass}'
                                 data-id=\"{$r['id']}\"
                                 data-name=\"{$fullName}\"
-                                data-address=\"{$address}\">
-                                Select
+                                data-address=\"{$address}\"
+                                data-hhnum=\"{$hhNum}\"
+                                data-role=\"{$role}\">
+                                {$btnText}
                             </button>
                         </td>
                     </tr>";
@@ -315,14 +342,6 @@ if (isset($_SESSION['role'])) {
                 ?>
             </tbody>
         </table>
-    </div>
-
-    <!-- ROW 2 -->
-    <div class="form-row">
-        <div class="form-group">
-            <label>Address</label>
-            <input type="text" name="address" required>
-        </div>
     </div>
 
     <!-- ROW 3 -->

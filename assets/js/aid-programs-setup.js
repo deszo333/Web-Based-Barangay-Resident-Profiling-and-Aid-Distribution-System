@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!editBtn) return;
 
         programId.value = editBtn.dataset.id || "";
-        if(form.version) form.version.value = editBtn.dataset.version || ""; // Map version for OCC
+        if(form.version) form.version.value = editBtn.dataset.version || ""; 
         form.program_name.value = editBtn.dataset.name || "";
         form.aid_type.value = editBtn.dataset.type || "";
         form.date_scheduled.value = editBtn.dataset.date || "";

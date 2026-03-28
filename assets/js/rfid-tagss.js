@@ -57,25 +57,31 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(data => {
             data = data.trim();
             if (data === "success") {
-                alert("RFID Tag saved successfully!");
-                closeModal();
-                form.reset();
-                location.reload();
+                Popup.open({
+                    title: "Success",
+                    message: "RFID Tag saved successfully!",
+                    type: "success",
+                    onOk: () => { location.reload(); }
+                });
+            } else if (data === "has_active") {
+                Popup.open({
+                    title: "Active Tag Exists",
+                    message: "This household already has an Active RFID tag assigned to it.<br><br>Please deactivate their old tag before issuing a new one to prevent system conflicts.",
+                    type: "warning"
+                });
             } else if (data === "conflict") {
-                // === OCC CONFLICT HANDLER ===
-                alert("Update Conflict! Another staff member modified this RFID tag. Please refresh the page and try again.");
+                Popup.open({ title: "Update Conflict", message: "Another staff member modified this RFID tag. Please refresh the page and try again.", type: "danger" });
             } else if (data === "rfid_exists") {
-                alert("RFID already exists!");
+                Popup.open({ title: "Duplicate RFID", message: "This RFID number is already registered in the system.", type: "warning" });
             } else if (data === "missing") {
-                alert("Please fill in required fields");
+                Popup.open({ title: "Incomplete Data", message: "Please fill in all required fields.", type: "warning" });
             } else {
-                console.log(data);
-                alert("Failed to save RFID tag");
+                Popup.open({ title: "Save Failed", message: "Failed to save RFID tag: " + data, type: "danger" });
             }
         })
         .catch(err => {
             console.error(err);
-            alert("Server error");
+            Popup.open({ title: "Server Error", message: "A network error occurred.", type: "danger" });
         });
     });
 
@@ -94,38 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
         overlay.classList.add("show");
     });
 
-    // DELETE BUTTON
-    document.addEventListener("click", function (e) {
-        const deleteBtn = e.target.closest(".delete");
-        if (!deleteBtn) return;
-
-        const rfidId = deleteBtn.dataset.id;
-        if (!rfidId) return;
-
-        if (!confirm("Are you sure you want to delete this RFID tag?")) return;
-
-        fetch("delete_rfid_tag.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `rfid_id=${encodeURIComponent(rfidId)}`
-        })
-        .then(res => res.text())
-        .then(data => {
-            data = data.trim();
-            if (data === "success") {
-                const row = deleteBtn.closest("tr");
-                if (row) row.remove();
-                alert("RFID tag deleted successfully!");
-            } else {
-                alert("Failed to delete RFID tag: " + data);
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Server error");
-        });
-    });
-
     // ACTIVATE / DEACTIVATE BUTTONS
     document.addEventListener("click", function(e) {
         const activateBtn = e.target.closest(".activate-btn");
@@ -137,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const rfidId = btn.dataset.id;
         if (!rfidId) return;
 
-        const action = activateBtn ? "Active" : "Disabled";
+        const action = activateBtn ? "Active" : "Inactive";
 
         fetch("toggle_rfid_status.php", {
             method: "POST",
@@ -154,19 +128,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (statusSpan) statusSpan.textContent = action;
                 if (statusSpan) statusSpan.className = "status " + (action === "Active" ? "active" : "inactive");
-
+                
                 if (activateBtn) {
                     toggleCell.innerHTML = `<button class="deactivate-btn" data-id="${rfidId}">Deactivate</button>`;
                 } else {
                     toggleCell.innerHTML = `<button class="activate-btn" data-id="${rfidId}">Activate</button>`;
                 }
+
+                Popup.open({
+                    title: "Status Updated",
+                    message: `RFID tag has been marked as <b>${action}</b>.`,
+                    type: "success"
+                });
+
+            } else if (data === "has_active") {
+                Popup.open({
+                    title: "Activation Blocked",
+                    message: "This household already has an <b>Active</b> tag in the system.<br><br>To prevent duplicate tags, you must find their current active tag and deactivate it before you can reactivate this old one.",
+                    type: "warning"
+                });
             } else {
-                alert("Failed to update status: " + data);
+                Popup.open({ title: "Update Failed", message: "Failed to update status: " + data, type: "danger" });
             }
         })
         .catch(err => {
-            console.error(err);
-            alert("Server error");
+            Popup.open({ title: "Server Error", message: "A network error occurred.", type: "danger" });
         });
     });
 });

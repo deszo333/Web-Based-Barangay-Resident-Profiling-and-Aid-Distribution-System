@@ -144,14 +144,16 @@ $search = $_GET['search'] ?? '';
 
                         if ($result && mysqli_num_rows($result) > 0) {
                             while ($row = mysqli_fetch_assoc($result)) {
+                                $badgeClass = ($row['status'] === 'Active') ? 'badge-active' : 'badge-inactive';
+
                                 echo "<tr>
                                     <td>{$row['program_name']}</td>
                                     <td>{$row['aid_type']}</td>
                                     <td>{$row['date_scheduled']}</td>
                                     <td>{$row['beneficiaries']}</td>
-                                    <td><span class='status-badge'>{$row['status']}</span></td>
+                                    <td><span class='status-badge {$badgeClass}'>{$row['status']}</span></td>
                                     <td>
-                                        <button class='edit'
+                                         <button class='edit'
                                             data-id='{$row['id']}'
                                             data-version='{$row['version']}'
                                             data-name='{$row['program_name']}'
@@ -187,34 +189,52 @@ $search = $_GET['search'] ?? '';
 <!-- ADD / EDIT PROGRAM MODAL -->
 <div class="resident-modal" id="residentModal">
     <div class="resident-modal-content">
-        <span class="close-btn">&times;</span>
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fa-solid fa-hand-holding-heart" id="modalIcon" style="color:#144876; font-size: 20px; margin-right: 8px;"></i>
+                <h3 id="modalTitle" style="display:inline-block; margin:0; color:#144876;">Add Aid Program</h3>
+            </div>
+            <span class="close-btn" id="closeModal">&times;</span>
+        </div>
 
-        <h3>Add / Edit Aid Program</h3>
-
-        <form id="addResidentForm">
+        <form id="addResidentForm" class="program-form-grid">
             <input type="hidden" name="id" id="program_id">
             <input type="hidden" name="version" id="program_version">
 
-            <label>Program Name</label>
-            <input type="text" name="program_name" placeholder="Program Name" required>
+            <div class="form-row two">
+                <div class="form-field">
+                    <label>Program Name <span style="color:red;">*</span></label>
+                    <input type="text" name="program_name" placeholder="e.g., Ayuda 2024" required style="text-transform: capitalize;">
+                </div>
+                <div class="form-field">
+                    <label>Aid Type <span style="color:red;">*</span></label>
+                    <input type="text" name="aid_type" placeholder="e.g., Food Packs, Cash Assistance" required style="text-transform: capitalize;">
+                </div>
+            </div>
 
-            <label>Aid Type</label>
-            <input type="text" name="aid_type" placeholder="Type (Food, Cash, Medical)" required>
+            <div class="form-row two">
+                <div class="form-field">
+                    <label>Date Scheduled <span style="color:red;">*</span></label>
+                    <input type="date" name="date_scheduled" required>
+                </div>
+                <div class="form-field">
+                    <label>Number of Beneficiaries <span style="color:red;">*</span></label>
+                    <input type="number" name="beneficiaries" placeholder="Target count" min="0" required>
+                </div>
+            </div>
 
-            <label>Date Scheduled</label>
-            <input type="date" name="date_scheduled" required>
-            
-            <label>Number of Beneficiaries</label>
-            <input type="number" name="beneficiaries" placeholder="Total Beneficiaries" required>
+            <div class="form-row one">
+                <div class="form-field">
+                    <label>Status <span style="color:red;">*</span></label>
+                    <select name="status" required>
+                        <option value="" disabled selected>Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
 
-            <label>Status</label>
-            <select name="status" required>
-                <option value="" disabled selected>Select Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-            </select>
-
-            <button type="submit">Save Program</button>
+            <button type="submit" style="margin-top: 20px;">Save Program</button>
         </form>
     </div>
 </div>

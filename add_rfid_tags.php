@@ -9,6 +9,34 @@ if (empty($rfid_number) || empty($household_id)) {
     echo "missing"; exit;
 }
 
+$household_id = (int)$household_id;
+$rfid_id_int = !empty($rfid_id) ? (int)$rfid_id : 0;
+
+$check_sql = "SELECT rfid_number FROM rfid_tags WHERE household_id = ? AND status = 'Active'";
+
+if ($rfid_id_int !== 0) {
+    $check_sql .= " AND id != ?";
+}
+
+$stmt_check = mysqli_prepare($conn, $check_sql);
+
+if ($rfid_id_int !== 0) {
+    mysqli_stmt_bind_param($stmt_check, "ii", $household_id, $rfid_id_int);
+} else {
+    mysqli_stmt_bind_param($stmt_check, "i", $household_id);
+}
+
+mysqli_stmt_execute($stmt_check);
+$check_result = mysqli_stmt_get_result($stmt_check);
+
+if (mysqli_num_rows($check_result) > 0) {
+    echo "has_active";
+    mysqli_stmt_close($stmt_check);
+    mysqli_close($conn);
+    exit;
+}
+mysqli_stmt_close($stmt_check);
+
 // Check for duplicate RFID number globally
 if ($rfid_id !== '') {
     $check = $conn->prepare("SELECT 1 FROM rfid_tags WHERE rfid_number = ? AND id != ?");

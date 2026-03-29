@@ -440,20 +440,38 @@ button i {
     justify-content: center;
     align-items: center;
     z-index: 999;
+    padding: 20px;
+}
+
+.modal-overlay.show {
+    display: flex;
 }
 
 .modal-content {
     background: #fff;
     padding: 20px;
     border-radius: 10px;
-    width: 400px;
-    text-align: center;
+    width: 800px;
+    max-width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+    text-align: left;
+    position: relative;
 }
 
 .close-modal {
     float: right;
     font-size: 20px;
     cursor: pointer;
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-modal:hover {
+    color: #000;
+    background: #f0f0f0;
 }
 
 

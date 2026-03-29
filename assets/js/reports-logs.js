@@ -164,21 +164,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // make the card tappable to open the modal
                 const tappableCard = document.querySelector(".tappable-chart");
+                console.log("Looking for tappable card...", tappableCard);
+                
                 if (tappableCard) {
+                    console.log("Found tappable card, attaching click listener");
                     tappableCard.addEventListener("click", () => {
                         const progName = tappableCard.dataset.program;
+                        console.log("Card clicked! Program name:", progName);
+                        
                         // fetch modal data
                         fetch("get_detailed_report.php", {
                             method: "POST",
                             headers: { "Content-Type": "application/x-www-form-urlencoded" },
                             body: "program_name=" + encodeURIComponent(progName)
                         })
-                        .then(res => res.text())
+                        .then(res => {
+                            console.log("Fetch response received:", res.status);
+                            if (!res.ok) {
+                                throw new Error("HTTP error, status = " + res.status);
+                            }
+                            return res.text();
+                        })
                         .then(html => {
+                            console.log("HTML received, updating modal");
                             document.getElementById("modalReportContent").innerHTML = html;
-                            document.getElementById("detailedReportModal").style.display = "flex";
+                            const modal = document.getElementById("detailedReportModal");
+                            modal.classList.add("show");
+                            console.log("Modal displayed");
+                        })
+                        .catch(err => {
+                            console.error("Fetch error:", err);
+                            alert("Error loading detailed report: " + err.message);
                         });
                     });
+                } else {
+                    console.warn("Tappable card not found");
                 }
             })
             .catch(err => console.error("Error:", err));
@@ -191,7 +211,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeBtn = document.getElementById("closeReportModal");
     if (closeBtn) {
         closeBtn.addEventListener("click", () => {
-            document.getElementById("detailedReportModal").style.display = "none";
+            console.log("Close button clicked");
+            document.getElementById("detailedReportModal").classList.remove("show");
+        });
+    }
+    
+    // close modal when clicking outside
+    const modalOverlay = document.getElementById("detailedReportModal");
+    if (modalOverlay) {
+        modalOverlay.addEventListener("click", (e) => {
+            if (e.target === modalOverlay) {
+                console.log("Modal overlay clicked, closing");
+                modalOverlay.classList.remove("show");
+            }
         });
     }
 

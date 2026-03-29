@@ -106,8 +106,8 @@ if ($program_id > 0) {
             <div class="manual-entry-card">
                 <h4>Manual RFID Entry</h4>
                 <div class="manual-input-group">
-                    <input type="text" placeholder="Enter RFID number">
-                    <button class="process-btn">Process</button>
+                    <input type="text" id="manual_rfid_input" placeholder="Enter RFID number">
+                    <button class="process-btn" id="manual_process_btn">Process</button>
                 </div>
             </div>
 
@@ -238,6 +238,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     loadRecentTransactions();
+    
+    // === NEW: MANUAL RFID ENTRY LOGIC ===
+    const manualInput = document.getElementById("manual_rfid_input");
+    const manualProcessBtn = document.getElementById("manual_process_btn");
+
+    if (manualProcessBtn && manualInput) {
+        // 1. Click Listener for the Process Button
+        manualProcessBtn.addEventListener("click", () => {
+            const manualRfid = manualInput.value.trim().toUpperCase(); 
+            
+            if (manualRfid === "") {
+                Popup.open({ 
+                    title: "Input Required", 
+                    message: "Please enter an RFID number.", 
+                    type: "warning" 
+                });
+                return;
+            }
+
+            // Feed the typed ID into your existing scanner logic!
+            assignRFIDToInput(manualRfid);
+            
+            // Clear the input box after processing
+            manualInput.value = ""; 
+        });
+
+        // 2. Keyboard Listener (Press "Enter" to submit)
+        manualInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                manualProcessBtn.click();
+            }
+        });
+    }
+    // ====================================
     
     if (currentProgramId === 0) {
         Popup.open({

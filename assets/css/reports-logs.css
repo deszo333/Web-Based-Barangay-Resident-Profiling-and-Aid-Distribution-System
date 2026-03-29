@@ -307,9 +307,7 @@ button i {
 
     display: flex;
     flex-direction: column;
-    gap: 10px;
 
-    align-items: flex-start; 
 }
 
 .program-text {
@@ -394,12 +392,18 @@ button i {
     font-size: 20px;
     font-weight: 700;
     color: #000;
+    margin-left: 10px;
+    padding-bottom: 8px;
 }
 
-.program-details span {
+.program-details {
     font-size: 16px;
     color: #333;
-    margin-right: 12px;
+    margin-left: 10px;
+    margin-top: 3px;
+    display: flex;
+    gap: 20px;
+    
 }
 
 .hidden-program {
@@ -450,4 +454,38 @@ button i {
     float: right;
     font-size: 20px;
     cursor: pointer;
+}
+
+
+.audit-card {
+    margin-bottom: 20px;
+}
+
+/* TABLE WRAPPER */
+.audit-table-wrapper {
+    margin-top: 15px;
+    overflow-x: auto;
+}
+
+/* TABLE STYLE */
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.audit-table th,
+.audit-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+.audit-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+.audit-table tr:hover {
+    background: #f9f9f9;
 }

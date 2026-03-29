@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     labels: ["Claimed", "Remaining"],
                     datasets: [{
                         data: [distributed, remaining],
-                        backgroundColor: ["#4CAF50", "#FF6384"]
+                        backgroundColor: ["#006B2D", "#C81B20"]
                     }]
                 },
                 options: {
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ================================
-    // GENERATE REPORT + FILTER
+    // generate report and filter
     // ================================
     const generateBtn = document.querySelector(".generate-report");
 
@@ -123,36 +123,76 @@ document.addEventListener("DOMContentLoaded", () => {
         generateBtn.addEventListener("click", () => {
 
             const programName = document.getElementById("reportType").value;
-            const aidType = document.getElementById("program").value;
+
+            if (!programName) {
+                Popup.open({ 
+                    title: "Action Required", 
+                    message: "Please select a program from the dropdown first.", 
+                    type: "warning" 
+                });
+                return; 
+            }
 
             fetch("filter_programs.php", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body:
-                    "program_name=" + encodeURIComponent(programName) +
-                    "&aid_type=" + encodeURIComponent(aidType)
+                body: "program_name=" + encodeURIComponent(programName)
             })
             .then(res => res.text())
             .then(data => {
-
                 const list = document.querySelector(".program-list");
                 list.innerHTML = data;
 
-                const wrapper = document.querySelector(".program-list-wrapper");
-                if (wrapper) wrapper.style.maxHeight = "none";
+                // render the new, single enhanced pie chart
+                const canvas = document.querySelector(".mini-chart");
+                if (canvas) {
+                    canvas.style.display = "block";
+                    new Chart(canvas.getContext("2d"), {
+                        type: "pie",
+                        data: {
+                            labels: ["Claimed", "Remaining"],
+                            datasets: [{
+                                data: [canvas.dataset.claimed, canvas.dataset.remaining],
+                                backgroundColor: ["#006B2D", "#C81B20"]
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
 
-                // IMPORTANT: render charts AFTER DOM update
-                requestAnimationFrame(() => {
-                    initCharts();
-                });
-
+                // make the card tappable to open the modal
+                const tappableCard = document.querySelector(".tappable-chart");
+                if (tappableCard) {
+                    tappableCard.addEventListener("click", () => {
+                        const progName = tappableCard.dataset.program;
+                        // fetch modal data
+                        fetch("get_detailed_report.php", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                            body: "program_name=" + encodeURIComponent(progName)
+                        })
+                        .then(res => res.text())
+                        .then(html => {
+                            document.getElementById("modalReportContent").innerHTML = html;
+                            document.getElementById("detailedReportModal").style.display = "flex";
+                        });
+                    });
+                }
             })
             .catch(err => console.error("Error:", err));
         });
     }
 
-    
+    // ================================
+    // modal close logic
+    // ================================
+    const closeBtn = document.getElementById("closeReportModal");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+            document.getElementById("detailedReportModal").style.display = "none";
+        });
+    }
 
 });

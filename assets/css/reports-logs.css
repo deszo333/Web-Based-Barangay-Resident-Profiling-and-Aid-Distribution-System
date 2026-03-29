@@ -465,6 +465,10 @@ button i {
 .audit-table-wrapper {
     margin-top: 15px;
     overflow-x: auto;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
 }
 
 /* TABLE STYLE */
@@ -484,6 +488,10 @@ button i {
 .audit-table th {
     background: #f5f5f5;
     font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
 }
 
 .audit-table tr:hover {

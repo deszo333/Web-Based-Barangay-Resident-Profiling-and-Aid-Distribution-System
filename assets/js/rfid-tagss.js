@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         const formData = new FormData(form);
 
-        fetch("add_rfid_tags.php", {
+        fetch("../api/add_rfid_tags.php", {
             method: "POST",
             body: formData
         })
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const action = activateBtn ? "Active" : "Inactive";
 
-        fetch("toggle_rfid_status.php", {
+        fetch("../api/toggle_rfid_status.php", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: `rfid_id=${encodeURIComponent(rfidId)}&status=${encodeURIComponent(action)}`

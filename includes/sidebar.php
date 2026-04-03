@@ -67,7 +67,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li>
-                <a href="signup.php" class="<?= ($currentPage == 'signup.php') ? 'active' : '' ?>">
+                <a href="../public/signup.php" class="<?= ($currentPage == 'signup.php') ? 'active' : '' ?>">
                     <i class="fa-solid fa-user-plus"></i> <span>Create Staff Account</span>
                 </a>
             </li>

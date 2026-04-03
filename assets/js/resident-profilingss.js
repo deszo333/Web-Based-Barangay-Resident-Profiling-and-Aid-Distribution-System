@@ -118,7 +118,7 @@ if (searchInput) {
 
         const searchValue = this.value;
 
-        fetch("search_resident.php?search=" + encodeURIComponent(searchValue))
+        fetch("../api/search_resident.php?search=" + encodeURIComponent(searchValue))
         .then(response => response.text())
         .then(data => {
 
@@ -391,7 +391,7 @@ if (form) {
 
         const isUpdate = residentId !== "";
 
-        const url = isUpdate ? "update_resident.php" : "add_resident.php";
+        const url = isUpdate ? "../api/update_resident.php" : "../api/add_resident.php";
 
         Popup.open({
             title: isUpdate ? "Update Resident" : "Add Resident",
@@ -603,7 +603,7 @@ if (deleteBtn) {
 
         onOk: () => {
 
-            fetch('delete_resident.php', {
+            fetch('../api/delete_resident.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'

@@ -46,7 +46,7 @@ if (searchInput) {
 
         const searchValue = this.value;
 
-        fetch("search_household.php?search=" + encodeURIComponent(searchValue))
+        fetch("../api/search_household.php?search=" + encodeURIComponent(searchValue))
         .then(response => response.text())
         .then(data => {
             tableBody.innerHTML = data;
@@ -295,7 +295,7 @@ if (searchInput) {
             if (modalTitle) modalTitle.innerText = "Add New Household";
             if (modalIcon) modalIcon.className = "fa-solid fa-house";
 
-            fetch('get_next_household_number.php')
+            fetch('../api/get_next_household_number.php')
                 .then(res => res.text())
                 .then(num => { if(form.household_number) form.household_number.value = num; })
                 .catch(err => console.error(err));
@@ -324,7 +324,7 @@ if (searchInput) {
             type: "warning",
             onOk: () => {
 
-                fetch('add_household.php', {
+                fetch('../api/add_household.php', {
                     method: 'POST',
                     body: new FormData(form)
                 })
@@ -454,7 +454,7 @@ if (searchInput) {
         type: "warning",
         onOk: () => {
 
-            fetch('delete_household.php', {
+            fetch('../api/delete_household.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `id=${encodeURIComponent(id)}`

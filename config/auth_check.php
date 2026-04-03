@@ -1,0 +1,17 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// --- STRICT CACHE CONTROL ---
+// Force the browser to check with the server every single time
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+// If the user does not have a session user_id or role, redirect to login
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+    header("Location: ../public/login.php");
+    exit();
+}
+?>

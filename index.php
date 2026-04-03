@@ -1,5 +1,5 @@
 <?php
 // always to login
-header("Location: login.php");
+header("Location: public/login.php");
 exit();
 ?>

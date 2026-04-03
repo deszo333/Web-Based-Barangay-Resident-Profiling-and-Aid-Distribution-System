@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let programName = this.value;
 
-            fetch("get_aid_type.php", {
+            fetch("../api/get_aid_type.php", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return; 
             }
 
-            fetch("filter_programs.php", {
+            fetch("../api/filter_programs.php", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         console.log("Card clicked! Program name:", progName);
                         
                         // fetch modal data
-                        fetch("get_detailed_report.php", {
+                        fetch("../api/get_detailed_report.php", {
                             method: "POST",
                             headers: { "Content-Type": "application/x-www-form-urlencoded" },
                             body: "program_name=" + encodeURIComponent(progName)

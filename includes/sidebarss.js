@@ -20,7 +20,7 @@ logoutBtn.addEventListener("click", () => {
             type: "warning",
             onOk: () => {
                 // actually destroy
-                window.location.href = "logout.php";
+                window.location.href = "../public/logout.php";
             }
         });
     });

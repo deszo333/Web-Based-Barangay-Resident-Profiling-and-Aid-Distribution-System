@@ -425,9 +425,26 @@ input[type="date"] {
     border-color: #000;
 }
 
+/* STATUS BADGES */
+.status {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status.active {
+    background: #16a34a;
+    color: #fff;
+}
+
+.status.inactive {
+    background: #9c2828;
+    color: #fff;
+}
 
 .deactivate {
-    background: #28a745;
+    background: #9c2828;
     color: #fff;
     border: none;
     padding: 6px 10px;
@@ -436,10 +453,69 @@ input[type="date"] {
 }
 
 .activate {
-    background: #dc3545;
+    background: #000;
     color: #fff;
     border: none;
     padding: 6px 10px;
     border-radius: 6px;
     cursor: pointer;
+}
+
+
+.tabs-container {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* TAB BASE */
+.tab {
+    padding: 8px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: #f1f1f1;
+    color: #333;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* HOVER */
+.tab:hover {
+    background-color: #e0e0e0;
+    border-color: #ccc;
+}
+
+/* 🔥 FORCE ACTIVE STATE */
+.tab.active{
+    background-color: #144876 !important;
+    color: #ffffff !important;
+    border: 1px solid #0f355a !important;
+    box-shadow: 0 3px 10px rgba(20, 72, 118, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Optional: make active more visible */
+.tab.active:hover {
+    background-color: #144876 !important;
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 600px) {
+    .tabs-container {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .tab {
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+
 }

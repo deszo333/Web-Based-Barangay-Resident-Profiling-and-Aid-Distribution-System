@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const formData = new FormData(form);
 
-                fetch("add_aid_program.php", {
+                fetch("../api/add_aid_program.php", {
                     method: "POST",
                     body: formData
                 })
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
             message: "Are you sure you want to delete this record?",
             type: "warning",
             onOk: () => {
-                fetch("delete_aid_program.php", {
+                fetch("../api/delete_aid_program.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: "id=" + encodeURIComponent(id)

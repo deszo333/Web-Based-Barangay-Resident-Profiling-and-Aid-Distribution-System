@@ -1,19 +1,21 @@
 const sidebar = document.getElementById("sidebar");
-const toggleBtn = document.getElementById("toggleBtn");
-const toggleIcon = document.getElementById("toggleIcon");
-const main = document.querySelector(".rp-dashboard");
+const toggleBtn = document.getElementById("toggleBtn") || document.getElementById("toggleSidebar");
+const toggleIcon = document.getElementById("toggleIcon") || (toggleBtn ? toggleBtn.querySelector("i") : null);
+const main = document.querySelector(".rp-dashboard") || document.getElementById("mainContent");
 const logoutBtn = document.getElementById("logoutBtn"); 
 
-toggleBtn.addEventListener("click", () => {
+if (toggleBtn) toggleBtn.addEventListener("click", () => {
     sidebar.classList.toggle("expanded");
     sidebar.classList.toggle("collapsed");
     main.classList.toggle("expanded");
 
-    toggleIcon.classList.toggle("fa-bars");
-    toggleIcon.classList.toggle("fa-xmark");
+    if (toggleIcon) {
+        toggleIcon.classList.toggle("fa-bars");
+        toggleIcon.classList.toggle("fa-xmark");
+    }
 });
 
-logoutBtn.addEventListener("click", () => {
+if (logoutBtn) logoutBtn.addEventListener("click", () => {
         Popup.open({
             title: "Confirm Logout",
             message: "Are you sure you want to logout?",

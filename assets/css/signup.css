@@ -21,7 +21,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image: url("../images/logo.png");
+    background-image: url("../images/logos.png");
     background-repeat: no-repeat;
     background-position: left -245px center;
     background-size: 65% 110%;

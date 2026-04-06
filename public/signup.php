@@ -5,6 +5,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../config/db_connect.php';
 
+// Admin-only page
+if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
 $error = "";
 $success = "";
 

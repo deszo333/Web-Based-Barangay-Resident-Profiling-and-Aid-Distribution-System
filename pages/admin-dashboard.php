@@ -19,7 +19,6 @@ $total_active_programs = $row['total'];
 // Close connection
 mysqli_close($conn);
 
-$currentName = $_SESSION['first_name'] ?? 'Admin';
 ?>
 
 <!DOCTYPE html>
@@ -28,58 +27,12 @@ $currentName = $_SESSION['first_name'] ?? 'Admin';
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="../assets/css/admin-dashboard.css">
+    <link rel="stylesheet" href="../includes/sidebars.css">
     <link rel="stylesheet" href="../fontawesome/fontawesome/css/all.css">
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar collapsed" id="sidebar">
-
-    <!-- MANAGEMENT SECTION -->
-    <div class="sidebar-section">
-        <p class="sidebar-section-title">Management</p>
-        <ul class="sidebar-menu">
-            <li><a href="resident-profiling.php"><i class="fa-solid fa-users"></i> <span>Residents</span></a></li>
-            <li><a href="household-management.php"><i class="fa-solid fa-house"></i> <span>Households</span></a></li>
-            <li><a href="aid-program-setup.php"><i class="fa-solid fa-hand-holding-heart"></i> <span>Aid Programs</span></a></li>
-        </ul>
-    </div>
-
-    <!-- DISTRIBUTION SECTION -->
-    <div class="sidebar-section">
-        <p class="sidebar-section-title">Distribution</p>
-        <ul class="sidebar-menu">
-            <li><a href="rfid-tags-insurance.php"><i class="fa-solid fa-id-card"></i> <span>RFID Issuance</span></a></li>
-            <li><a href="distribution-page.php"><i class="fa-solid fa-qrcode"></i> <span>Distribution Page</span></a></li>
-        </ul>
-    </div>
-
-    <!-- REPORT SECTION -->
-    <div class="sidebar-section">
-        <p class="sidebar-section-title">Report</p>
-        <ul class="sidebar-menu">
-            <li><a href="reports-logs.php"><i class="fa-solid fa-file-lines"></i> <span>Reports & Logs</span></a></li>
-        </ul>
-    </div>
-
-    <!-- SETTINGS SECTION -->
-    <div class="sidebar-section">
-        <p class="sidebar-section-title">Settings</p>
-        <ul class="sidebar-menu">
-            <li><a href="account-man.php"><i class="fa-solid fa-cogs"></i> <span>Account Management</span></a></li>
-            <li><a href="../public/signup.php"><i class="fa-solid fa-user-plus"></i> <span>Create Staff Account</span></a></li>
-        </ul>
-    </div>
-
-    <!-- LOGOUT AT THE BOTTOM -->
-    <div class="sidebar-logout">
-        <button class="logout" id="logoutBtn">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Logout</span>
-        </button>
-    </div>
-
-</div>
+<?php include '../includes/sidebar.php'; ?>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -96,7 +49,7 @@ $currentName = $_SESSION['first_name'] ?? 'Admin';
     </div>
 
     <div class="nav-right" id="profileWrapper">
-        <span>Welcome, <?php echo htmlspecialchars($currentName); ?></span>
+        <span>Hello, <?php echo htmlspecialchars($currentName); ?></span>
         <img src="../assets/images/profiles.png" alt="User" id="profileBtn">
         <div class="profile-dropdown" id="profileDropdown">
             <div class="profile-info">
@@ -214,16 +167,6 @@ $currentName = $_SESSION['first_name'] ?? 'Admin';
         </div>
     </a>
 
-    <a href="../public/signup.php" class="actions-card-8">
-        <div class="card-content">
-            <span class="card-icon"><i class="fas fa-user-plus"></i></span>
-            <div class="card-text">
-                <span>Create Staff Account</span>
-                <p>Create new staff accounts</p>
-            </div>
-        </div>
-    </a>
-
 </section>
 
 </main>
@@ -253,7 +196,6 @@ $currentName = $_SESSION['first_name'] ?? 'Admin';
 
 <!-- Custom Popup -->
 <link rel="stylesheet" href="../assets/popup/popup.css">
-
 <div id="popup-container"></div>
 
 <script>
@@ -261,17 +203,18 @@ fetch("../assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
-
-        // Load popup.js AFTER the HTML exists
-        const script = document.createElement("script");
-        script.src = "../assets/popup/popup.js";
-        document.body.appendChild(script);
+        const popupScript = document.createElement("script");
+        popupScript.src = "../assets/popup/popup.js";
+        popupScript.onload = () => {
+            const dashScript = document.createElement("script");
+            dashScript.src = "../assets/js/admins-dashboard.js";
+            document.body.appendChild(dashScript);
+        };
+        document.body.appendChild(popupScript);
     });
 </script>
 
-
-<script src="../assets/js/resident-profilingss.js"></script>
-<script src="../assets/js/admins-dashboard.js"></script>
+<script src="../includes/sidebarss.js" defer></script>
 
 
 

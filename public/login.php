@@ -79,37 +79,40 @@ mysqli_close($conn);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Web-Based-Barangay-Resident-Profiling-and-Aid-Distribution-System</title>
+    <title>Barangay Login</title>
     <link rel="stylesheet" href="../assets/css/login.css">
 </head>
 <body class="auth-body">
 
-<div class="auth-box">
-    <img src="../assets/images/logos.png" alt="logo">
-    <h2>Barangay Abangan Norte</h2>
-    <p class="Household">Household Data Management System</p>
+<div class="bg"></div>
+<div class="login-card">
+    <div class="left-panel">
+        <img src="../assets/images/logos.png" class="logo" alt="logo">
+        <h1>Barangay Abangan Norte</h1>
+        <p id="tagline">Household Data Management System</p>
+    </div>
 
-    <form method="POST" action="">
-        <div class="input-group">
+    <div class="right-panel">
+        <h2>Sign In</h2>
+        
+        <form method="POST" action="">
             <label>Username</label>
-            <input type="text" name="username" placeholder="Enter your username" required>
+            <input type="text" name="username" required>
 
             <label>Password</label>
-            <input type="password" name="password" placeholder="Enter your password" required>
-        </div>
+            <input type="password" name="password" required>
 
-        <button type="submit" name="login">Sign in</button>
-    </form>
+            <button type="submit" name="login">Sign In</button>
+        </form>
 
-    <?php if (!empty($error)) { ?>
-        <p style="color:red; text-align:center; margin-top:10px;">
-            <?php echo $error; ?>
-        </p>
-    <?php } ?>
+        <?php if (!empty($error)) { ?>
+            <p class="error"><?php echo $error; ?></p>
+        <?php } ?>
 
-    <p class="authorized-p">Authorized Personnel Only</p>
-    <!-- <a href="signup.php" class="Register">Register New Account</a> -->
+        <p class="authorized">Authorized Personnel Only</p>
+    </div>
 </div>
 
+<script src="../assets/js/login.js"></script>
 </body>
 </html>

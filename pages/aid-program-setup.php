@@ -12,7 +12,6 @@ if (isset($_SESSION['role'])) {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,22 +20,25 @@ if (isset($_SESSION['role'])) {
     <link rel="stylesheet" href="../assets/css/aid-programs-setup.css">
     <link rel="stylesheet" href="../includes/sidebars.css">
     <link rel="stylesheet" href="../fontawesome/fontawesome/css/all.css">
+    <style>
+        /* New Dynamic Badges for the State Machine */
+        .status-badge { padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
+        .badge-scheduled { background-color: #e0f2fe; color: #0284c7; } /* Blue */
+        .badge-ongoing { background-color: #dcfce7; color: #16a34a; }   /* Green */
+        .badge-paused { background-color: #fef08a; color: #ca8a04; }    /* Yellow */
+        .badge-completed { background-color: #f3f4f6; color: #4b5563; } /* Gray */
+        .badge-archived { background-color: #fee2e2; color: #dc2626; }  /* Red */
+    </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="rp-navbar">
-    <!-- Sidebar Toggle -->
     <button class="toggle-sidebar" id="toggleBtn">
         <i class="fa-solid fa-bars" id="toggleIcon"></i>
     </button>
-
-    <!-- Back Button -->
     <a href="<?php echo $backLink; ?>" class="back-btn">
         <i class="fa-solid fa-arrow-left"></i>
     </a>
-
-    <!-- Navbar Content -->
     <div class="rp-navbar-content">
         <img src="../assets/images/logos.png" alt="Barangay Logo">
         <div class="nav-text">
@@ -46,59 +48,40 @@ if (isset($_SESSION['role'])) {
     </div>
 </nav>
 
-<!-- MAIN CONTENT -->
 <main class="rp-dashboard">
     <?php
-$status = $_GET['status'] ?? 'Active';
-$search = $_GET['search'] ?? '';
-?>
+    $status = $_GET['status'] ?? 'Scheduled';
+    $search = $_GET['search'] ?? '';
+    ?>
     <div class="rp-card">
 
-        <!-- UPPER PART -->
         <div class="rp-header">
             <div class="header-text">
                 <h2>Aid Programs</h2>
                 <p>Create and manage distribution programs</p>
 
                 <div class="tabs-container">
-                    
-
-                    <a href="?status=Active&search=<?php echo urlencode($_GET['search'] ?? ''); ?>" 
-                       class="tab <?php echo ($status == 'Active') ? 'active' : ''; ?>">
-                       Active
-                    </a>
-
-                    <a href="?status=Inactive&search=<?php echo urlencode($_GET['search'] ?? ''); ?>" 
-                       class="tab <?php echo ($status == 'Inactive') ? 'active' : ''; ?>">
-                       Inactive
-                    </a>
-
-                    <a href="?status=all&search=<?php echo urlencode($_GET['search'] ?? ''); ?>" 
-                       class="tab <?php echo ($status == 'all') ? 'active' : ''; ?>">
-                       All
-                    </a>
+                    <a href="?status=Scheduled&search=<?php echo urlencode($search); ?>" class="tab <?php echo ($status == 'Scheduled') ? 'active' : ''; ?>">Scheduled</a>
+                    <a href="?status=Ongoing&search=<?php echo urlencode($search); ?>" class="tab <?php echo ($status == 'Ongoing') ? 'active' : ''; ?>">Ongoing</a>
+                    <a href="?status=Paused&search=<?php echo urlencode($search); ?>" class="tab <?php echo ($status == 'Paused') ? 'active' : ''; ?>">Paused</a>
+                    <a href="?status=Completed&search=<?php echo urlencode($search); ?>" class="tab <?php echo ($status == 'Completed') ? 'active' : ''; ?>">Completed</a>
+                    <a href="?status=Archived&search=<?php echo urlencode($search); ?>" class="tab <?php echo ($status == 'Archived') ? 'active' : ''; ?>">Archived</a>
+                    <a href="?status=all&search=<?php echo urlencode($search); ?>" class="tab <?php echo ($status == 'all') ? 'active' : ''; ?>">All</a>
                 </div>
             </div>
 
             <div class="rp-actions">
-                <!-- SEARCH -->
                 <form method="GET" style="display: flex; gap: 10px;">
-                    <input type="text" name="search" placeholder="Search aid programs..." 
-                        value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-
-                    <!-- keep status when searching -->
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($_GET['status'] ?? 'Active'); ?>">
+                    <input type="text" name="search" placeholder="Search programs..." value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($status); ?>">
                 </form>
 
-                <!-- ADD BUTTON -->
                 <button class="add-resident">
-                    <i class="fa-solid fa-plus"></i>
-                    Add Program
+                    <i class="fa-solid fa-plus"></i> Add Program
                 </button>
             </div>
         </div>
 
-        <!-- LOWER PART: TABLE -->
         <div class="rp-table">
             <table>
                 <thead>
@@ -113,16 +96,11 @@ $search = $_GET['search'] ?? '';
                 </thead>
                 <tbody>
                     <?php
-                        $search = trim($_GET['search'] ?? '');
-                        $status = $_GET['status'] ?? 'Active';
-
+                        $searchEscaped = mysqli_real_escape_string($conn, trim($search));
                         $conditions = [];
 
-                        if ($search !== "") {
-                            $searchEscaped = mysqli_real_escape_string($conn, $search);
-                            $conditions[] = "(program_name LIKE '%$searchEscaped%' 
-                                            OR aid_type LIKE '%$searchEscaped%' 
-                                            OR date_scheduled LIKE '%$searchEscaped%')";
+                        if ($searchEscaped !== "") {
+                            $conditions[] = "(program_name LIKE '%$searchEscaped%' OR aid_type LIKE '%$searchEscaped%' OR date_scheduled LIKE '%$searchEscaped%')";
                         }
 
                         if ($status !== "all") {
@@ -130,17 +108,14 @@ $search = $_GET['search'] ?? '';
                             $conditions[] = "status = '$statusEscaped'";
                         }
 
-                        $whereSQL = "";
-                        if (!empty($conditions)) {
-                            $whereSQL = "WHERE " . implode(" AND ", $conditions);
-                        }
-
+                        $whereSQL = !empty($conditions) ? "WHERE " . implode(" AND ", $conditions) : "";
                         $sql = "SELECT * FROM aid_program $whereSQL ORDER BY id DESC";
                         $result = mysqli_query($conn, $sql);
 
                         if ($result && mysqli_num_rows($result) > 0) {
                             while ($row = mysqli_fetch_assoc($result)) {
-                                $badgeClass = ($row['status'] === 'Active') ? 'badge-active' : 'badge-inactive';
+                                // Dynamic Badge Class mapping
+                                $badgeClass = 'badge-' . strtolower($row['status']);
 
                                 echo "<tr>
                                     <td>{$row['program_name']}</td>
@@ -172,15 +147,11 @@ $search = $_GET['search'] ?? '';
                 </tbody>
             </table>
         </div>
-
     </div>
-
 </main>
 
-<!-- MODAL OVERLAY -->
 <div class="modal-overlay" id="modalOverlay"></div>
 
-<!-- ADD / EDIT PROGRAM MODAL -->
 <div class="resident-modal" id="residentModal">
     <div class="resident-modal-content">
         <div class="modal-header">
@@ -202,7 +173,7 @@ $search = $_GET['search'] ?? '';
                 </div>
                 <div class="form-field">
                     <label>Aid Type <span style="color:red;">*</span></label>
-                    <input type="text" name="aid_type" placeholder="e.g., Food Packs, Cash Assistance" required style="text-transform: capitalize;">
+                    <input type="text" name="aid_type" placeholder="e.g., Food Packs, Cash" required style="text-transform: capitalize;">
                 </div>
             </div>
 
@@ -222,8 +193,11 @@ $search = $_GET['search'] ?? '';
                     <label>Status <span style="color:red;">*</span></label>
                     <select name="status" required>
                         <option value="" disabled selected>Select Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Ongoing">Ongoing</option>
+                        <option value="Paused">Paused</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Archived">Archived</option>
                     </select>
                 </div>
             </div>
@@ -233,11 +207,8 @@ $search = $_GET['search'] ?? '';
     </div>
 </div>
 
-<!-- Custom Popup -->
 <link rel="stylesheet" href="../assets/popup/popup.css">
-
 <div id="popup-container"></div>
-
 <script>
 fetch("../assets/popup/popup.html")
     .then(res => res.text())
@@ -245,10 +216,9 @@ fetch("../assets/popup/popup.html")
         document.getElementById("popup-container").innerHTML = html;
     });
 </script>
-
 <script src="../assets/popup/popup.js" defer></script>
-
 <script src="../assets/js/aid-programs-setup.js"></script>
-<script src="../includes/sidebarss.js?v=2" defer></script><?php include '../includes/sidebar.php'; ?>
+<script src="../includes/sidebarss.js?v=2" defer></script>
+<?php include '../includes/sidebar.php'; ?>
 </body>
 </html>

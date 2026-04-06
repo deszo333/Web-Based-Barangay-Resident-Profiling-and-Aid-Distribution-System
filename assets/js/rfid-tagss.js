@@ -27,8 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // OPEN MODAL FOR ADD
     openBtn.addEventListener("click", () => {
         form.reset();
-        rfidId.value = ""; // clear hidden id
-        submitBtn.innerText = "Issue Tag"; // Only update submit button text
+        rfidId.value = "";
+        submitBtn.innerText = "Issue Tag";
+        const modalTitleEl = document.getElementById("modalTitle");
+        if (modalTitleEl) modalTitleEl.innerText = "Issue RFID Tag";
         modal.classList.add("show");
         overlay.classList.add("show");
     });
@@ -95,7 +97,9 @@ document.addEventListener("DOMContentLoaded", () => {
         rfidNumber.value = editBtn.dataset.rfid || "";
         if(householdSelect) householdSelect.value = editBtn.dataset.householdid || "";
 
-        submitBtn.innerText = "Update Tag"; // Only update submit button
+        submitBtn.innerText = "Update Tag";
+        const modalTitleEl = document.getElementById("modalTitle");
+        if (modalTitleEl) modalTitleEl.innerText = "Edit RFID Tag";
         modal.classList.add("show");
         overlay.classList.add("show");
     });
@@ -112,43 +116,57 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!rfidId) return;
 
         const action = activateBtn ? "Active" : "Inactive";
+        const actionLabel = activateBtn ? "activate" : "deactivate";
 
-        fetch("../api/toggle_rfid_status.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `rfid_id=${encodeURIComponent(rfidId)}&status=${encodeURIComponent(action)}`
-        })
-        .then(res => res.text())
-        .then(data => {
-            data = data.trim();
-            if (data === "success") {
-                const row = btn.closest("tr");
-                const statusSpan = row.querySelector(".status");
-                const toggleCell = btn.closest("td");
+        Popup.open({
+            title: `Confirm ${activateBtn ? "Activation" : "Deactivation"}`,
+            message: `Are you sure you want to ${actionLabel} this RFID tag?`,
+            type: activateBtn ? "info" : "warning",
+            onOk: () => {
+                fetch("../api/toggle_rfid_status.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `rfid_id=${encodeURIComponent(rfidId)}&status=${encodeURIComponent(action)}`
+                })
+                .then(res => res.text())
+                .then(data => {
+                    data = data.trim();
+                    if (data === "success") {
+                        const row = btn.closest("tr");
+                        const statusSpan = row.querySelector(".status");
+                        const toggleCell = btn.closest("td");
 
-                if (statusSpan) statusSpan.textContent = action;
-                if (statusSpan) statusSpan.className = "status " + (action === "Active" ? "active" : "inactive");
-                
-                if (activateBtn) {
-                    toggleCell.innerHTML = `<button class="deactivate-btn" data-id="${rfidId}">Deactivate</button>`;
-                } else {
-                    toggleCell.innerHTML = `<button class="activate-btn" data-id="${rfidId}">Activate</button>`;
-                }
+                        if (statusSpan) statusSpan.textContent = action;
+                        if (statusSpan) statusSpan.className = "status " + (action === "Active" ? "active" : "inactive");
+                        
+                        if (activateBtn) {
+                            toggleCell.innerHTML = `<button class="deactivate-btn" data-id="${rfidId}">Deactivate</button>`;
+                        } else {
+                            toggleCell.innerHTML = `<button class="activate-btn" data-id="${rfidId}">Activate</button>`;
+                        }
 
-                Popup.open({
-                    title: "Status Updated",
-                    message: `RFID tag has been marked as <b>${action}</b>.`,
-                    type: "success"
+                        Popup.open({
+                            title: "Status Updated",
+                            message: `RFID tag has been marked as <b>${action}</b>.`,
+                            type: "success"
+                        });
+
+                    } else if (data === "has_active") {
+                        Popup.open({
+                            title: "Activation Blocked",
+                            message: "This household already has an <b>Active</b> tag in the system.<br><br>To prevent duplicate tags, you must find their current active tag and deactivate it before you can reactivate this old one.",
+                            type: "warning"
+                        });
+                    } else {
+                        Popup.open({ title: "Update Failed", message: "Failed to update status: " + data, type: "danger" });
+                    }
+                })
+                .catch(err => {
+                    Popup.open({ title: "Server Error", message: "A network error occurred.", type: "danger" });
                 });
-
-            } else if (data === "has_active") {
-                Popup.open({
-                    title: "Activation Blocked",
-                    message: "This household already has an <b>Active</b> tag in the system.<br><br>To prevent duplicate tags, you must find their current active tag and deactivate it before you can reactivate this old one.",
-                    type: "warning"
-                });
-            } else {
-                Popup.open({ title: "Update Failed", message: "Failed to update status: " + data, type: "danger" });
+            }
+        });
+    });
             }
         })
         .catch(err => {

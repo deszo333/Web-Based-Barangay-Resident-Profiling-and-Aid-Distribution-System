@@ -246,7 +246,10 @@ if (isset($_SESSION['role'])) {
 <div class="resident-modal" id="residentModal">
     <div class="resident-modal-content">
         <div class="modal-header">
-            <h3>Add / Edit Tag</h3>
+            <div class="modal-title">
+                <i class="fa-solid fa-id-card" style="font-size:20px; color:#144876;"></i>
+                <h3 id="modalTitle" style="margin:0; color:#144876;">Issue RFID Tag</h3>
+            </div>
             <span class="close-btn" id="closeModal">&times;</span>
         </div>
 

@@ -26,49 +26,12 @@ mysqli_close($conn);
     <meta charset="UTF-8">
     <title>Staff Dashboard</title>
     <link rel="stylesheet" href="../assets/css/admin-dashboard.css">
+    <link rel="stylesheet" href="../includes/sidebars.css">
     <link rel="stylesheet" href="../fontawesome/fontawesome/css/all.css">
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar collapsed" id="sidebar">
-
-    <!-- MANAGEMENT SECTION -->
-    <div class="sidebar-section">
-        <p class="sidebar-section-title">Management</p>
-        <ul class="sidebar-menu">
-            <li><a href="resident-profiling.php"><i class="fa-solid fa-users"></i> <span>Residents</span></a></li>
-            <li><a href="household-management.php"><i class="fa-solid fa-house"></i> <span>Households</span></a></li>
-            <li><a href="aid-program-setup.php"><i class="fa-solid fa-hand-holding-heart"></i> <span>Aid Programs</span></a></li>
-        </ul>
-    </div>
-
-    <!-- DISTRIBUTION SECTION -->
-    <div class="sidebar-section">
-        <p class="sidebar-section-title">Distribution</p>
-        <ul class="sidebar-menu">
-            <li><a href="rfid-tags-insurance.php"><i class="fa-solid fa-id-card"></i> <span>RFID Issuance</span></a></li>
-            <li><a href="distribution-page.php"><i class="fa-solid fa-qrcode"></i> <span>Distribution Page</span></a></li>
-        </ul>
-    </div>
-
-    <!-- REPORT SECTION -->
-    <div class="sidebar-section">
-        <p class="sidebar-section-title">Report</p>
-        <ul class="sidebar-menu">
-            <li><a href="reports-logs.php"><i class="fa-solid fa-file-lines"></i> <span>Reports & Logs</span></a></li>
-        </ul>
-    </div>
-
-    <!-- LOGOUT AT THE BOTTOM -->
-    <div class="sidebar-logout">
-        <button class="logout" id="logoutBtn">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Logout</span>
-        </button>
-    </div>
-
-</div>
+<?php include '../includes/sidebar.php'; ?>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -84,9 +47,9 @@ mysqli_close($conn);
         </div>
     </div>
 
-    <div class="nav-right">
-        <img src="../assets/images/profiles.png" alt="User">
-        <span>Welcome, Staff</span>
+    <div class="nav-right" style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-weight: 600;">Hello, <?php echo htmlspecialchars($currentName); ?></span>
+        <img src="../assets/images/profiles.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%;">
     </div>
 </nav>
 
@@ -144,12 +107,12 @@ mysqli_close($conn);
         </div>
     </a>
 
-    <a href="aid-program-setup.php" class="actions-card-3">
+    <a href="distribution-page.php" class="actions-card-3">
         <div class="card-content">
             <span class="card-icon"><i class="fas fa-hand-holding-heart"></i></span>
             <div class="card-text">
-                <span>Aid Program Setup</span>
-                <p>Manage aid distribution programs</p>
+                <span>Distribution Page</span>
+                <p>Start and manage aid distribution events</p>
             </div>
         </div>
     </a>
@@ -165,17 +128,17 @@ mysqli_close($conn);
     </a>
 
 
-    <a href="distribution-page.php" class="actions-card-5">
+    <a href="reports-logs.php" class="actions-card-5">
         <div class="card-content">
-            <span class="card-icon"><i class="fas fa-qrcode"></i></span>
+            <span class="card-icon"><i class="fas fa-file-alt"></i></span>
             <div class="card-text">
-                <span>Distribution Page</span>
-                <p>RFID scanning during aid events</p>
+                <span>Reports & Logs</span>
+                <p>Generate distribution reports</p>
             </div>
         </div>
     </a>
 
-    <a href="reports-logs.php" class="actions-card-6">
+    <a href="reports-logs.php" class="actions-card-6" style="display:none;">
         <div class="card-content">
             <span class="card-icon"><i class="fas fa-file-alt"></i></span>
             <div class="card-text">
@@ -189,9 +152,7 @@ mysqli_close($conn);
 
 </main>
 
-<!-- Custom Popup -->
 <link rel="stylesheet" href="../assets/popup/popup.css">
-
 <div id="popup-container"></div>
 
 <script>
@@ -199,12 +160,13 @@ fetch("../assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
+        const script = document.createElement("script");
+        script.src = "../assets/popup/popup.js";
+        document.body.appendChild(script);
     });
 </script>
 
-<script src="../assets/popup/popup.js" defer></script>
-
-<script src="../assets/js/admins-dashboard.js"></script>
+<script src="../includes/sidebarss.js" defer></script>
 
 
 

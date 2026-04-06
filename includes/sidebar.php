@@ -1,6 +1,8 @@
 <?php
 // Get the current page filename
 $currentPage = basename($_SERVER['PHP_SELF']);
+// Determine role for conditional sidebar items
+$sidebarRole = $_SESSION['role'] ?? 'staff';
 ?>
 
 <!-- sidebar.php -->
@@ -57,7 +59,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </ul>
     </div>
 
-    <!-- SETTINGS SECTION -->
+    <?php if ($sidebarRole === 'admin'): ?>
+    <!-- SETTINGS SECTION — Admin Only -->
     <div class="sidebar-section">
         <p class="sidebar-section-title">Settings</p>
         <ul class="sidebar-menu">
@@ -73,6 +76,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </li>
         </ul>
     </div>
+    <?php endif; ?>
 
     <!-- LOGOUT AT THE BOTTOM -->
     <div class="sidebar-logout">

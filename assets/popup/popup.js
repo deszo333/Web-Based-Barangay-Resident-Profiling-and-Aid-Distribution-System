@@ -37,9 +37,20 @@
         icon.innerHTML = icons[type] || icons.info;
         icon.className = `popup-icon ${type}`;
 
+        // Cancel button — always shown when there is an onOk action
+        if (onOk) {
+            const cancelBtn = document.createElement("button");
+            cancelBtn.textContent = "Cancel";
+            cancelBtn.className = "btn-secondary";
+            cancelBtn.onclick = () => {
+                close();
+            };
+            actions.appendChild(cancelBtn);
+        }
+
         const okBtn = document.createElement("button");
-        okBtn.textContent = "OK";
-        okBtn.className = "btn-primary";
+        okBtn.textContent = onOk ? "Confirm" : "OK";
+        okBtn.className = type === "danger" ? "btn-danger" : "btn-primary";
         okBtn.onclick = () => {
             if (onOk) onOk();
             close();

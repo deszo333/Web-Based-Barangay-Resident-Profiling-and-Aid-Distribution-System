@@ -2,7 +2,13 @@
 require_once __DIR__ . '/../config/auth_check.php';
 require_once __DIR__ . '/../config/db_connect.php';
 
-$backLink = "../public/login.php"; // default fallback if no login session
+// Admin-only page — redirect staff away
+if (($_SESSION['role'] ?? '') !== 'admin') {
+    header("Location: staff-dashboard.php");
+    exit();
+}
+
+$backLink = "../pages/admin-dashboard.php";
 if (isset($_SESSION['role'])) {
     if ($_SESSION['role'] === 'admin') {
         $backLink = "../pages/admin-dashboard.php";
@@ -24,24 +30,26 @@ if (isset($_SESSION['role'])) {
 <body>
 
 <!-- NAVBAR -->
-<nav class="rp-navbar">
-    <!-- Sidebar Toggle -->
-    <button class="toggle-sidebar" id="toggleBtn">
-        <i class="fa-solid fa-bars" id="toggleIcon"></i>
-    </button>
-
-    <!-- Back Button -->
-    <a href="<?php echo $backLink; ?>" class="back-btn">
-        <i class="fa-solid fa-arrow-left"></i>
-    </a>
-
-    <!-- Navbar Content -->
-    <div class="rp-navbar-content">
-        <img src="../assets/images/logos.png" alt="Barangay Logo">
-        <div class="nav-text">
-            <span class="page-title">Barangay Abangan Norte</span>
-            <p>Household Data Management System</p>
+<nav class="rp-navbar" style="display: flex; justify-content: space-between; align-items: center; padding-right: 30px;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="toggle-sidebar" id="toggleBtn">
+            <i class="fa-solid fa-bars" id="toggleIcon"></i>
+        </button>
+        <a href="<?php echo $backLink; ?>" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div class="rp-navbar-content">
+            <img src="../assets/images/logos.png" alt="Barangay Logo">
+            <div class="nav-text">
+                <span class="page-title">Barangay Abangan Norte</span>
+                <p>Household Data Management System</p>
+            </div>
         </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; color: white;">
+        <span style="font-weight: 600; font-size: 15px;">Hello, <?php echo htmlspecialchars($currentName); ?></span>
+        <img src="../assets/images/profiles.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%;">
     </div>
 </nav>
 
@@ -76,13 +84,14 @@ $search = $_GET['search'] ?? '';
                 </div>
             </div>
             
-            <div class="rp-actions">
-                <input 
-                    type="text" 
-                    name="search" 
-                    id="searchInput"
-                    placeholder="Search users..."
-                    value="<?php echo $_GET['search'] ?? ''; ?>">
+            <div class="rp-actions" style="display: flex; gap: 10px; align-items: center;">
+                <form method="GET" style="display:flex; gap:10px; margin:0;">
+                    <input type="text" name="search" id="searchInput" placeholder="Search users..." value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($status); ?>">
+                </form>
+                <button id="openAddAccountBtn" style="background-color: #16a34a; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; gap: 8px; align-items: center; white-space: nowrap;">
+                    <i class="fa-solid fa-plus"></i> Add Account
+                </button>
             </div>
         </div>
 
@@ -236,6 +245,56 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 </main>
 
+<!-- ADD ACCOUNT MODAL -->
+<div id="addAccountModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:10px; width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <h2 style="margin-top:0; margin-bottom:20px; color:#1e293b; font-size: 20px;">Add New Account</h2>
+        <form id="addAccountForm" style="display:flex; flex-direction:column; gap:15px;">
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">First Name <span style="color:red;">*</span></label>
+                <input type="text" name="first_name" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Last Name <span style="color:red;">*</span></label>
+                <input type="text" name="last_name" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Username <span style="color:red;">*</span></label>
+                <input type="text" name="username" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+            </div>
+            
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Password <span style="color:red;">*</span></label>
+                <div style="position: relative; margin-top: 5px;">
+                    <input type="password" name="password" id="addPassword" required style="width:100%; padding:10px; padding-right:40px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    <i class="fa-solid fa-eye" id="toggleAddPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
+                </div>
+            </div>
+
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Confirm Password <span style="color:red;">*</span></label>
+                <div style="position: relative; margin-top: 5px;">
+                    <input type="password" name="confirm_password" id="addConfirmPassword" required style="width:100%; padding:10px; padding-right:40px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    <i class="fa-solid fa-eye" id="toggleAddConfirmPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
+                </div>
+            </div>
+
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Role <span style="color:red;">*</span></label>
+                <select name="role" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                <button type="button" id="closeAddAccountBtn" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#e2e8f0; color:#475569; font-weight:600;">Cancel</button>
+                <button type="submit" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#16a34a; color:white; font-weight:600;">Save Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 
 <!-- Custom Popup -->
 <link rel="stylesheet" href="../assets/popup/popup.css">
 

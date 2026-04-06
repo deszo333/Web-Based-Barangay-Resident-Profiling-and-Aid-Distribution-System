@@ -194,9 +194,6 @@ if (isset($_SESSION['role'])) {
 </div>
 
 
-</main>
-
-
 <!-- Custom Popup -->
 <link rel="stylesheet" href="../assets/popup/popup.css">
 

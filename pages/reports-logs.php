@@ -69,6 +69,7 @@ if (isset($_SESSION['role'])) {
 
     <script>const autoLoadProgram = "<?php echo $auto_load_program; ?>";</script>
 
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
     <div class="rp-card audit-card">
         <div class="rp-header">
             <div class="header-text">
@@ -101,11 +102,19 @@ if (isset($_SESSION['role'])) {
                     
                     if ($audit_res && mysqli_num_rows($audit_res) > 0) {
                         while ($log = mysqli_fetch_assoc($audit_res)) {
-                            // parse json if the details column is stored as json
                             $details_text = $log['details'];
                             $json = json_decode($details_text, true);
-                            if (json_last_error() === JSON_ERROR_NONE && isset($json['action_summary'])) {
-                                $details_text = $json['action_summary'];
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $parts = [];
+                                if (!empty($json['action_summary'])) $parts[] = $json['action_summary'];
+                                
+                                // Add only the most relevant ID
+                                if (!empty($json['resident_id']))     $parts[] = "ID: " . $json['resident_id'];
+                                elseif (!empty($json['rfid_id']))     $parts[] = "RFID ID: " . $json['rfid_id'];
+                                elseif (!empty($json['program_id']))  $parts[] = "Program ID: " . $json['program_id'];
+                                elseif (!empty($json['household_number'])) $parts[] = "Household: " . $json['household_number'];
+                                
+                                $details_text = implode(" - ", $parts);
                             }
                             
                             // construct the display name (first last) with fallbacks
@@ -132,6 +141,7 @@ if (isset($_SESSION['role'])) {
             </table>
         </div>
     </div>
+    <?php endif; ?>
         
     <div class="rp-card">
         <div class="rp-header">
@@ -204,13 +214,21 @@ fetch("../assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
-    });
+        const popupScript = document.createElement("script");
+        popupScript.src = "../assets/popup/popup.js";
+        popupScript.onload = () => {
+            const pageScript = document.createElement("script");
+            pageScript.src = "../assets/js/reports-logs.js";
+            pageScript.onload = () => {
+                if (typeof window.initReportsLogs === 'function') window.initReportsLogs();
+            };
+            document.body.appendChild(pageScript);
+        };
+        document.body.appendChild(popupScript);
+    })
+    .catch(err => console.error('Popup HTML load error:', err));
 </script>
 
-<script src="../assets/popup/popup.js" defer></script>
-
-
-<script src="../assets/js/reports-logs.js"></script>
 <script src="../includes/sidebarss.js?v=2" defer></script><?php include '../includes/sidebar.php'; ?>
 
 </body>

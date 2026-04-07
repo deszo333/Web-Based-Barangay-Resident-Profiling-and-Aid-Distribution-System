@@ -47,9 +47,17 @@ mysqli_close($conn);
         </div>
     </div>
 
-    <div class="nav-right" style="display: flex; align-items: center; gap: 10px;">
+    <div class="nav-right" id="profileWrapper" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
         <span style="font-weight: 600;">Hello, <?php echo htmlspecialchars($currentName); ?></span>
-        <img src="../assets/images/profiles.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%;">
+        <img src="../assets/images/profiles.png" alt="User" id="profileBtn" style="width: 40px; height: 40px; border-radius: 50%; pointer-events: none;">
+        <div class="profile-dropdown" id="profileDropdown">
+            <div class="profile-info">
+                <p><strong><?php echo htmlspecialchars($currentName); ?></strong></p>
+                <small>Staff Account</small>
+            </div>
+            <hr>
+            <button id="changePasswordBtn" style="background: none; border: none; cursor: pointer; width: 100%; text-align: left; padding: 5px 0;">Change Password</button>
+        </div>
     </div>
 </nav>
 
@@ -109,7 +117,7 @@ mysqli_close($conn);
 
     <a href="distribution-page.php" class="actions-card-3">
         <div class="card-content">
-            <span class="card-icon"><i class="fas fa-hand-holding-heart"></i></span>
+            <span class="card-icon"><i class="fas fa-qrcode"></i></span>
             <div class="card-text">
                 <span>Distribution Page</span>
                 <p>Start and manage aid distribution events</p>
@@ -155,15 +163,39 @@ mysqli_close($conn);
 <link rel="stylesheet" href="../assets/popup/popup.css">
 <div id="popup-container"></div>
 
+<!-- CHANGE PASSWORD MODAL -->
+<div id="changePasswordModal" class="modal-overlay">
+    <div class="modal-box">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+            <label>New Password</label>
+            <input type="password" name="new_password" id="newPassword" required>
+            <div class="strength-wrapper">
+                <div class="strength-bar">
+                    <div id="strengthFill"></div>
+                </div>
+                <small id="strengthText">Password strength</small>
+            </div>
+            <label>Confirm New Password</label>
+            <input type="password" name="confirm_password" required>
+            <div class="modal-actions">
+                <button type="button" id="closeChangePassword">Cancel</button>
+                <button type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 fetch("../assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
-        const script = document.createElement("script");
-        script.src = "../assets/popup/popup.js";
-        document.body.appendChild(script);
-    });
+        const popupScript = document.createElement("script");
+        popupScript.src = "../assets/popup/popup.js";
+        document.body.appendChild(popupScript);
+    })
+    .catch(err => console.error('Popup HTML load error:', err));
 </script>
 
 <script src="../includes/sidebarss.js" defer></script>

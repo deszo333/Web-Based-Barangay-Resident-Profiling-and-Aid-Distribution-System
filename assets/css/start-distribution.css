@@ -74,6 +74,12 @@ body {
 /* MAIN DASHBOARD */
 .rp-dashboard {
     padding: 25px;
+    margin-left: 75px;
+    transition: margin-left 0.3s ease;
+}
+
+.rp-dashboard.expanded {
+    margin-left: 250px;
 }
 
 /* PROGRAM TOP CARD */

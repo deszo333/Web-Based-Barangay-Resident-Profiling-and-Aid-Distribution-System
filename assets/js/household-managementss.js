@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+window.initHouseholdManagement = function() {
 
     /* =========================
        DOM ELEMENTS
@@ -463,6 +463,11 @@ if (searchInput) {
             .then(data => {
                 if (data.trim() === 'success') {
                     deleteBtn.closest('tr').remove();
+                    Popup.open({
+                        title: "Deleted",
+                        message: "Household archived successfully.",
+                        type: "success"
+                    });
                 } else {
                     Popup.open({
                         title: "Delete Failed",
@@ -584,4 +589,11 @@ if (searchInput) {
         }
     });
 
-});
+};
+
+// Call immediately if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initHouseholdManagement);
+} else {
+    window.initHouseholdManagement();
+}

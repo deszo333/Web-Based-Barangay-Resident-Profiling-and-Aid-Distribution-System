@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+window.initAidPrograms = function() {
     const modal = document.getElementById("residentModal");
     const overlay = document.getElementById("modalOverlay");
     const closeBtn = document.querySelector(".close-btn");
@@ -129,6 +129,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     data = data.trim();
                     if (data === "success") {
                         deleteBtn.closest("tr")?.remove();
+                        Popup.open({
+                            title: "Deleted",
+                            message: "Aid program deleted successfully.",
+                            type: "success"
+                        });
                     } else {
                         Popup.open({
                             title: "Delete Failed",
@@ -148,4 +153,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-});
+};
+
+// Call immediately if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initAidPrograms);
+} else {
+    window.initAidPrograms();
+}

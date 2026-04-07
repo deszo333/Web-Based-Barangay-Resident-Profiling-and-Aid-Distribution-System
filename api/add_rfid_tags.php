@@ -2,12 +2,22 @@
 require_once __DIR__ . '/../config/auth_check.php';
 require_once __DIR__ . '/../config/db_connect.php';
 
+// Initialize logging array for browser console
+$logs = [];
+
+// Helper function to add logs
+function addLog(&$logs, $message) {
+    $logs[] = $message;
+    error_log($message);
+}
+
 $rfid_id = trim($_POST['rfid_id'] ?? '');
 $rfid_number = trim($_POST['rfid_number'] ?? '');
 $household_id = trim($_POST['household_id'] ?? '');
 
 if (empty($rfid_number) || empty($household_id)) {
-    echo "missing"; exit;
+    echo json_encode(["status" => "missing", "logs" => $logs]);
+    exit;
 }
 
 $household_id = (int)$household_id;
@@ -31,7 +41,7 @@ mysqli_stmt_execute($stmt_check);
 $check_result = mysqli_stmt_get_result($stmt_check);
 
 if (mysqli_num_rows($check_result) > 0) {
-    echo "has_active";
+    echo json_encode(["status" => "has_active", "logs" => $logs]);
     mysqli_stmt_close($stmt_check);
     mysqli_close($conn);
     exit;
@@ -47,18 +57,25 @@ if ($rfid_id !== '') {
     $check->bind_param("s", $rfid_number);
 }
 $check->execute(); $check->store_result();
-if ($check->num_rows > 0) { echo "rfid_exists"; exit; }
+if ($check->num_rows > 0) { 
+    echo json_encode(["status" => "rfid_exists", "logs" => $logs]);
+    exit; 
+}
 
 // Start Transaction to safely manage tag states
 mysqli_begin_transaction($conn);
 try {
     // If issuing a new tag, disable old tags for this household first
     if ($rfid_id === '') {
+        addLog($logs, "[RFID] NEW TAG ISSUANCE INITIATED -> HOUSEHOLD_ID: $household_id | RFID_NUMBER: $rfid_number");
+        
         $conn->query("UPDATE rfid_tags SET status='Disabled' WHERE household_id = " . intval($household_id));
         $stmt = $conn->prepare("INSERT INTO rfid_tags (household_id, rfid_number, status) VALUES (?, ?, 'Active')");
         $stmt->bind_param("is", $household_id, $rfid_number);
         $stmt->execute();
         $new_rfid_id = mysqli_insert_id($conn);
+        
+        addLog($logs, "[RFID] NEW TAG CREATED -> NEW_RFID_ID: $new_rfid_id | STATUS: Active");
         
         $current_user_id = $_SESSION['user_id'] ?? null;
         
@@ -75,24 +92,46 @@ try {
             "status" => "Active"
         ];
         log_audit($conn, $current_user_id, "Create", "RFID Tag Issuance", json_encode($audit_data));
+        
+        addLog($logs, "[RFID] AUDIT LOG RECORDED -> RFID_ID: $new_rfid_id | USER_ID: $current_user_id | HOUSEHOLD: $hh_number");
     } else {
-        // UPDATE (OCC Enabled)
+        // UPDATE (OCC Enabled) - Secure One-Step OCC with Detailed Logging
+        addLog($logs, "[OCC] ========== RFID EDIT PROCESS STARTED ==========");
+        
         $version = isset($_POST['version']) && $_POST['version'] !== '' ? (int)$_POST['version'] : null;
-        if ($version === null) { echo "error"; exit; }
+        if ($version === null) { 
+            addLog($logs, "[OCC] ✗ FAILED: version parameter is NULL or empty");
+            echo json_encode(["status" => "error", "logs" => $logs]);
+            exit; 
+        }
 
-        // 1. DO THE OCC CHECK FIRST (before version is incremented)
-        $check_exists = mysqli_query($conn, "SELECT id FROM rfid_tags WHERE id=$rfid_id AND version=$version");
-        if (mysqli_num_rows($check_exists) === 0) {
-            echo "conflict";
+        addLog($logs, "[OCC] EDIT INITIATED -> RFID_ID: $rfid_id_int | SENT_VERSION: $version | NEW_HOUSEHOLD_ID: $household_id | NEW_RFID_NUMBER: $rfid_number");
+
+        $stmt = $conn->prepare("
+            UPDATE rfid_tags
+            SET household_id = ?, rfid_number = ?, version = version + 1
+            WHERE id = ? AND version = ?
+        ");
+        $stmt->bind_param("isii", $household_id, $rfid_number, $rfid_id_int, $version);
+        $stmt->execute();
+
+        addLog($logs, "[OCC] DATABASE UPDATE -> Affected Rows: " . $stmt->affected_rows);
+
+        if ($stmt->affected_rows === 0) {
+            // Check what the actual current version is to help diagnose the conflict
+            $conflict_check = mysqli_query($conn, "SELECT version FROM rfid_tags WHERE id = $rfid_id_int");
+            $conflict_row = mysqli_fetch_assoc($conflict_check);
+            $actual_version = $conflict_row['version'] ?? "NOT_FOUND";
+            
+            addLog($logs, "[OCC] ✗ CONFLICT DETECTED -> SENT_VERSION: $version | ACTUAL_DB_VERSION: $actual_version (MISMATCH!)");
+            addLog($logs, "[OCC] ========== RFID EDIT PROCESS FAILED ==========");
+            
             mysqli_rollback($conn);
-            $conn->close();
+            echo json_encode(["status" => "conflict", "logs" => $logs]);
             exit;
         }
 
-        // 2. THEN DO THE UPDATE (now version will be incremented)
-        $stmt = $conn->prepare("UPDATE rfid_tags SET household_id = ?, rfid_number = ?, version=version+1 WHERE id = ? AND version=?");
-        $stmt->bind_param("isii", $household_id, $rfid_number, $rfid_id, $version);
-        $stmt->execute();
+        addLog($logs, "[OCC] ✓ UPDATE SUCCESS -> VERSION INCREMENTED (old: $version → new: " . ($version + 1) . ")");
         
         // === TRIGGER AUDIT LOG FOR RFID EDIT ===
         // Get household number for readable audit details
@@ -107,12 +146,17 @@ try {
             "household_number" => $hh_number
         ];
         log_audit($conn, $current_user_id, "Update", "RFID Management", json_encode($audit_data));
+        
+        addLog($logs, "[OCC] AUDIT LOG RECORDED -> RFID_ID: $rfid_id_int | USER_ID: $current_user_id | HOUSEHOLD: $hh_number");
+        addLog($logs, "[OCC] ========== RFID EDIT PROCESS COMPLETED SUCCESSFULLY ==========");
     }
     
     mysqli_commit($conn);
-    echo "success";
+    echo json_encode(["status" => "success", "logs" => $logs]);
 } catch (Exception $e) {
     mysqli_rollback($conn);
-    echo "error";
+    addLog($logs, "[ERROR] Exception caught: " . $e->getMessage());
+    echo json_encode(["status" => "error", "logs" => $logs]);
 }
 $conn->close();
+

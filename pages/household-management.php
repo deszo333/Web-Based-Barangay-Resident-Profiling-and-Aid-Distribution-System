@@ -424,12 +424,21 @@ fetch("../assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
-    });
+        const popupScript = document.createElement("script");
+        popupScript.src = "../assets/popup/popup.js";
+        popupScript.onload = () => {
+            const pageScript = document.createElement("script");
+            pageScript.src = "../assets/js/household-managementss.js";
+            pageScript.onload = () => {
+                if (typeof window.initHouseholdManagement === 'function') window.initHouseholdManagement();
+            };
+            document.body.appendChild(pageScript);
+        };
+        document.body.appendChild(popupScript);
+    })
+    .catch(err => console.error('Popup HTML load error:', err));
 </script>
 
-<script src="../assets/popup/popup.js" defer></script>
-
-<script src="../assets/js/household-managementss.js"></script>
 <script src="../includes/sidebarss.js?v=2" defer></script><?php include '../includes/sidebar.php'; ?>
 
 <script src="../assets/js/rfid_scanner.js"></script>

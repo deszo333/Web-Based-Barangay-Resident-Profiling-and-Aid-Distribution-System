@@ -1,27 +1,28 @@
-document.addEventListener("DOMContentLoaded", () => {
+window.initRfidTags = function() {
+    // FIX 1: Guard to prevent double-binding event listeners
+    if (window.rfidInitialized) return;
+    window.rfidInitialized = true;
+
     const openBtn = document.querySelector(".add-tag");
     const modal = document.getElementById("residentModal");
     const overlay = document.getElementById("modalOverlay");
     const closeBtn = document.getElementById("closeModal");
     const form = document.getElementById("addResidentForm");
-    const submitBtn = document.getElementById("submitBtn"); // Explicit submit button
+    const submitBtn = document.getElementById("submitBtn");
 
     const rfidId = document.getElementById("rfid_id");
     const rfidNumber = document.getElementById("rfid_number");
     const householdSelect = document.getElementById("household_id");
-    const scanBtn = document.getElementById("scanRfidBtn");
-    const rfidOverlay = document.getElementById("rfidOverlay");
-    const cancelRfid = document.getElementById("cancelRfid");
-    const rfidInput = document.getElementById("rfid_number");
 
     if (!openBtn || !modal || !overlay || !closeBtn || !form || !rfidId || !submitBtn) {
         console.error("Modal elements missing");
         return;
     }
 
-    // HIDE modal and overlay on page load
     modal.classList.remove("show");
     overlay.classList.remove("show");
+
+    const rfidOverlay = document.getElementById("rfidOverlay");
     if (rfidOverlay) rfidOverlay.classList.remove("show");
 
     // OPEN MODAL FOR ADD
@@ -36,19 +37,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // CLOSE MODAL
-    closeBtn.addEventListener("click", closeModal);
-    overlay.addEventListener("click", closeModal);
     function closeModal() {
         modal.classList.remove("show");
         overlay.classList.remove("show");
     }
-
-    let rfidBuffer = "";
-    let scanning = false;
+    closeBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", closeModal);
 
     // SUBMIT FORM (Add or Update)
     form.addEventListener("submit", function (e) {
         e.preventDefault();
+        
+        // FIX 2: Lock the submit button to prevent double-clicks
+        const originalText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Saving...";
+
         const formData = new FormData(form);
 
         fetch("../api/add_rfid_tags.php", {
@@ -56,8 +60,17 @@ document.addEventListener("DOMContentLoaded", () => {
             body: formData
         })
         .then(res => res.text())
-        .then(data => {
-            data = data.trim();
+        .then(text => {
+            let data = text.trim();
+            
+            // Extract the status if the backend sends JSON debug logs
+            try {
+                if (text.startsWith("{")) {
+                    const parsed = JSON.parse(text);
+                    data = parsed.status || data; 
+                }
+            } catch(e) {}
+
             if (data === "success") {
                 Popup.open({
                     title: "Success",
@@ -68,11 +81,11 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (data === "has_active") {
                 Popup.open({
                     title: "Active Tag Exists",
-                    message: "This household already has an Active RFID tag assigned to it.<br><br>Please deactivate their old tag before issuing a new one to prevent system conflicts.",
+                    message: "This household already has an Active RFID tag assigned to it.<br><br>Please deactivate their old tag before issuing a new one.",
                     type: "warning"
                 });
             } else if (data === "conflict") {
-                Popup.open({ title: "Update Conflict", message: "Another staff member modified this RFID tag. Please refresh the page and try again.", type: "danger" });
+                Popup.open({ title: "Update Conflict", message: "Another staff member modified this RFID tag. Please refresh and try again.", type: "danger" });
             } else if (data === "rfid_exists") {
                 Popup.open({ title: "Duplicate RFID", message: "This RFID number is already registered in the system.", type: "warning" });
             } else if (data === "missing") {
@@ -84,6 +97,11 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => {
             console.error(err);
             Popup.open({ title: "Server Error", message: "A network error occurred.", type: "danger" });
+        })
+        .finally(() => {
+            // Unlock the button if it fails so they can try again
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalText;
         });
     });
 
@@ -93,9 +111,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!editBtn) return;
 
         rfidId.value = editBtn.dataset.id || "";
-        if(form.version) form.version.value = editBtn.dataset.version || ""; // Map version for OCC
+        const versionField = document.getElementById("rfid_version");
+        if (versionField) versionField.value = editBtn.dataset.version || "";
         rfidNumber.value = editBtn.dataset.rfid || "";
-        if(householdSelect) householdSelect.value = editBtn.dataset.householdid || "";
+        if (householdSelect) householdSelect.value = editBtn.dataset.householdid || "";
 
         submitBtn.innerText = "Update Tag";
         const modalTitleEl = document.getElementById("modalTitle");
@@ -104,16 +123,16 @@ document.addEventListener("DOMContentLoaded", () => {
         overlay.classList.add("show");
     });
 
-    // ACTIVATE / DEACTIVATE BUTTONS
-    document.addEventListener("click", function(e) {
+    // ACTIVATE / DEACTIVATE BUTTONS — FIXED: now inside DOMContentLoaded
+    document.addEventListener("click", function (e) {
         const activateBtn = e.target.closest(".activate-btn");
         const deactivateBtn = e.target.closest(".deactivate-btn");
 
         const btn = activateBtn || deactivateBtn;
         if (!btn) return;
 
-        const rfidId = btn.dataset.id;
-        if (!rfidId) return;
+        const id = btn.dataset.id;
+        if (!id) return;
 
         const action = activateBtn ? "Active" : "Inactive";
         const actionLabel = activateBtn ? "activate" : "deactivate";
@@ -121,28 +140,29 @@ document.addEventListener("DOMContentLoaded", () => {
         Popup.open({
             title: `Confirm ${activateBtn ? "Activation" : "Deactivation"}`,
             message: `Are you sure you want to ${actionLabel} this RFID tag?`,
-            type: activateBtn ? "info" : "warning",
+            type: "warning",
             onOk: () => {
                 fetch("../api/toggle_rfid_status.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: `rfid_id=${encodeURIComponent(rfidId)}&status=${encodeURIComponent(action)}`
+                    body: `rfid_id=${encodeURIComponent(id)}&status=${encodeURIComponent(action)}`
                 })
                 .then(res => res.text())
                 .then(data => {
                     data = data.trim();
                     if (data === "success") {
                         const row = btn.closest("tr");
-                        const statusSpan = row.querySelector(".status");
+                        const statusSpan = row ? row.querySelector(".status") : null;
                         const toggleCell = btn.closest("td");
 
-                        if (statusSpan) statusSpan.textContent = action;
-                        if (statusSpan) statusSpan.className = "status " + (action === "Active" ? "active" : "inactive");
-                        
-                        if (activateBtn) {
-                            toggleCell.innerHTML = `<button class="deactivate-btn" data-id="${rfidId}">Deactivate</button>`;
-                        } else {
-                            toggleCell.innerHTML = `<button class="activate-btn" data-id="${rfidId}">Activate</button>`;
+                        if (statusSpan) {
+                            statusSpan.textContent = action;
+                            statusSpan.className = "status " + (action === "Active" ? "active" : "inactive");
+                        }
+                        if (toggleCell) {
+                            toggleCell.innerHTML = activateBtn
+                                ? `<button class="deactivate-btn" data-id="${id}">Deactivate</button>`
+                                : `<button class="activate-btn" data-id="${id}">Activate</button>`;
                         }
 
                         Popup.open({
@@ -150,27 +170,27 @@ document.addEventListener("DOMContentLoaded", () => {
                             message: `RFID tag has been marked as <b>${action}</b>.`,
                             type: "success"
                         });
-
                     } else if (data === "has_active") {
                         Popup.open({
                             title: "Activation Blocked",
-                            message: "This household already has an <b>Active</b> tag in the system.<br><br>To prevent duplicate tags, you must find their current active tag and deactivate it before you can reactivate this old one.",
+                            message: "This household already has an <b>Active</b> tag. Deactivate it first.",
                             type: "warning"
                         });
                     } else {
                         Popup.open({ title: "Update Failed", message: "Failed to update status: " + data, type: "danger" });
                     }
                 })
-                .catch(err => {
+                .catch(() => {
                     Popup.open({ title: "Server Error", message: "A network error occurred.", type: "danger" });
                 });
             }
         });
     });
-            }
-        })
-        .catch(err => {
-            Popup.open({ title: "Server Error", message: "A network error occurred.", type: "danger" });
-        });
-    });
-});
+};
+
+// Call immediately if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initRfidTags);
+} else {
+    window.initRfidTags();
+}

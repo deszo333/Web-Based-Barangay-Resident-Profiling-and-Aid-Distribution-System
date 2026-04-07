@@ -36,6 +36,16 @@ if ($row = mysqli_fetch_assoc($result)) {
     mysqli_stmt_bind_param($update_stmt, "si", $newStatus, $id);
     
     if (mysqli_stmt_execute($update_stmt)) {
+        // Get username for audit
+        $userInfo = mysqli_fetch_assoc(mysqli_query($conn, "SELECT username, CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id = $id"));
+        $audit_data = [
+            "action_summary" => "User Account Status Changed to $newStatus",
+            "target_user" => $userInfo['full_name'] ?? "ID: $id",
+            "username" => $userInfo['username'] ?? "",
+            "user_id" => $id,
+            "new_status" => $newStatus
+        ];
+        log_audit($conn, (int)$_SESSION['user_id'], "Update", "Account Management", json_encode($audit_data));
         echo json_encode(['status' => 'success', 'new_status' => $newStatus]);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Database update failed.']);

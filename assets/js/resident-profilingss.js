@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+window.initResidentProfiling = function() {
 
     /* =========================
        DOM ELEMENTS
@@ -709,4 +709,11 @@ if (deleteBtn) {
         }
     });
 
-});
+};
+
+// Call immediately if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initResidentProfiling);
+} else {
+    window.initResidentProfiling();
+}

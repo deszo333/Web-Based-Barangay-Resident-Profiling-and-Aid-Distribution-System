@@ -294,7 +294,6 @@ while ($row = mysqli_fetch_assoc($result)) {
     </div>
 </div>
 
-<!-- 
 <!-- Custom Popup -->
 <link rel="stylesheet" href="../assets/popup/popup.css">
 
@@ -305,13 +304,21 @@ fetch("../assets/popup/popup.html")
     .then(res => res.text())
     .then(html => {
         document.getElementById("popup-container").innerHTML = html;
-    });
+        const popupScript = document.createElement("script");
+        popupScript.src = "../assets/popup/popup.js";
+        popupScript.onload = () => {
+            const amScript = document.createElement("script");
+            amScript.src = "../assets/js/account-man.js?v=<?php echo time(); ?>";
+            amScript.onload = () => {
+                if (typeof window.initAccountMan === 'function') window.initAccountMan();
+            };
+            document.body.appendChild(amScript);
+        };
+        document.body.appendChild(popupScript);
+    })
+    .catch(err => console.error('Popup HTML load error:', err));
 </script>
 
-<script src="../assets/popup/popup.js" defer></script>
-
-
-<script src="../assets/js/account-man.js?v=<?php echo time(); ?>"></script>
 <script src="../includes/sidebarss.js" defer></script><?php include '../includes/sidebar.php'; ?>
 
 </body>

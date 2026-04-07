@@ -135,7 +135,7 @@ if ($program_id > 0) {
                 <div class="transaction-card single-view">
                     <div class="card-header-flex">
                         <h3 style="color: #ffffff; margin-bottom: 0;">Recent Claims</h3>
-                        <a href="reports-logs.php?program_id=<?php echo $program_id; ?>" class="view-report-btn">
+                        <a href="reports-logs.php?program_id=<?php echo $program_id; ?>&program_name=<?php echo urlencode($program_name); ?>" class="view-report-btn">
                             <i class="fa-solid fa-file-lines"></i> View Report
                         </a>
                     </div>

@@ -1,0 +1,299 @@
+=========================================
+             PROJECT TREE                
+=========================================
+.
+├── .env
+├── .gitignore
+├── .htaccess
+├── api
+│   ├── add_account_process.php
+│   ├── add_aid_program.php
+│   ├── add_household.php
+│   ├── add_resident.php
+│   ├── add_rfid_tags.php
+│   ├── change-password-process.php
+│   ├── delete_aid_program.php
+│   ├── delete_household.php
+│   ├── delete_resident.php
+│   ├── delete_rfid_tag.php
+│   ├── export_report.php
+│   ├── fetch_recent_transactions.php
+│   ├── filter_programs.php
+│   ├── get_aid_type.php
+│   ├── get_detailed_report.php
+│   ├── get_householdinfo.php
+│   ├── get_next_household_number.php
+│   ├── process_scan.php
+│   ├── search_household.php
+│   ├── search_resident.php
+│   ├── toggle_program_state.php
+│   ├── toggle_rfid_status.php
+│   ├── toggle_user_status.php
+│   └── update_resident.php
+├── assets
+│   ├── css
+│   │   ├── account-man.css
+│   │   ├── admin-dashboard.css
+│   │   ├── aid-programs-setup.css
+│   │   ├── distribution-page.css
+│   │   ├── households-management.css
+│   │   ├── login.css
+│   │   ├── reports-logs.css
+│   │   ├── resident-profiling.css
+│   │   ├── rfid-tags-insurance.css
+│   │   ├── signup.css
+│   │   └── start-distribution.css
+│   ├── images
+│   │   ├── aid.png
+│   │   ├── barangay.jpg
+│   │   ├── household.png
+│   │   ├── logos.png
+│   │   ├── profiles.png
+│   │   └── resident-profiling.png
+│   ├── js
+│   │   ├── account-man.js
+│   │   ├── admins-dashboard.js
+│   │   ├── aid-programs-setup.js
+│   │   ├── chart.umd.min.js
+│   │   ├── distribution-page.js
+│   │   ├── household-managementss.js
+│   │   ├── login.js
+│   │   ├── reports-logs.js
+│   │   ├── resident-profilingss.js
+│   │   ├── rfid-tagss.js
+│   │   ├── rfid_scanner.js
+│   │   ├── script.js
+│   │   └── start-distribution.js
+│   ├── popup
+│   │   ├── popup.css
+│   │   ├── popup.html
+│   │   └── popup.js
+│   └── sql_commands
+│       └── barangay_db (3).sql
+├── compile.py
+├── compiled_codebase.txt
+├── config
+│   ├── auth_check.php
+│   ├── database.php
+│   └── db_connect.php
+├── cypress
+│   ├── e2e
+│   │   ├── auth.cy.js
+│   │   └── resident_profiling_cy.js
+│   ├── fixtures
+│   │   └── example.json
+│   └── support
+│       ├── commands.js
+│       └── e2e.js
+├── includes
+│   ├── sidebar.php
+│   ├── sidebars.css
+│   └── sidebarss.js
+├── index.php
+├── pages
+│   ├── account-man.php
+│   ├── admin-dashboard.php
+│   ├── aid-program-setup.php
+│   ├── distribution-page.php
+│   ├── household-management.php
+│   ├── reports-logs.php
+│   ├── resident-profiling.php
+│   ├── rfid-tags-insurance.php
+│   ├── staff-dashboard.php
+│   └── start-distribution.php
+├── public
+│   ├── login.php
+│   ├── logout.php
+│   └── signup.php
+└── rfid
+
+
+=========================================
+             TARGET FILES                
+=========================================
+
+
+==================================================
+📁 FILE: cypress/support/commands.js
+==================================================
+
+// ***********************************************
+// This example commands.js shows you how to
+// create various custom commands and overwrite
+// existing commands.
+//
+// For more comprehensive examples of custom
+// commands please read more here:
+// https://on.cypress.io/custom-commands
+// ***********************************************
+//
+//
+// -- This is a parent command --
+// Cypress.Commands.add('login', (email, password) => { ... })
+//
+//
+// -- This is a child command --
+// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
+//
+//
+// -- This is a dual command --
+// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
+//
+//
+// -- This will overwrite an existing command --
+// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+==================================================
+📁 FILE: cypress/support/e2e.js
+==================================================
+
+// ***********************************************************
+// This example support/e2e.js is processed and
+// loaded automatically before your test files.
+//
+// This is a great place to put global configuration and
+// behavior that modifies Cypress.
+//
+// You can change the location of this file or turn off
+// automatically serving support files with the
+// 'supportFile' configuration option.
+//
+// You can read more here:
+// https://on.cypress.io/configuration
+// ***********************************************************
+
+// Import commands.js using ES2015 syntax:
+import './commands'
+
+==================================================
+📁 FILE: cypress.config.js
+==================================================
+
+[FILE NOT FOUND: Make sure the path is correct]
+
+
+==================================================
+📁 FILE: public/login.php
+==================================================
+
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../config/db_connect.php';
+
+// if already have a session (not logged out), send them straight to their dashboard
+if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
+    $role = strtolower($_SESSION['role']);
+    if ($role === 'admin') {
+        header("Location: ../pages/admin-dashboard.php");
+    } elseif ($role === 'staff') {
+        header("Location: ../pages/staff-dashboard.php");
+    } else {
+        header("Location: ../pages/dashboard.html");
+    }
+    exit();
+}
+
+$error = "";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
+
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+
+    if ($username === "" || $password === "") {
+        $error = "Please fill in all fields.";
+    } else {
+
+        // Get user with role
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT id, username, password, role FROM users WHERE username = ?"
+        );
+        mysqli_stmt_bind_param($stmt, "s", $username);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+
+        if ($result && mysqli_num_rows($result) === 1) {
+            $user = mysqli_fetch_assoc($result);
+
+            if (password_verify($password, $user['password'])) {
+
+                // Save session data
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
+
+                // Role-based redirect
+                $role = strtolower($user['role']);
+
+                if ($role === 'admin') {
+                    header("Location: ../pages/admin-dashboard.php");
+                } elseif ($role === 'staff') {
+                    header("Location: ../pages/staff-dashboard.php");
+                } else {
+                    header("Location: ../pages/dashboard.html");
+                }
+                exit();
+
+            } else {
+                $error = "Incorrect password.";
+            }
+
+        } else {
+            $error = "Account not found.";
+        }
+
+        mysqli_stmt_close($stmt);
+    }
+}
+
+mysqli_close($conn);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Barangay Login</title>
+    <link rel="stylesheet" href="../assets/css/login.css">
+</head>
+<body class="auth-body">
+
+<div class="bg"></div>
+<div class="login-card">
+    <div class="left-panel">
+        <img src="../assets/images/logos.png" class="logo" alt="logo">
+        <h1>Barangay Abangan Norte</h1>
+        <p id="tagline">Household Data Management System</p>
+    </div>
+
+    <div class="right-panel">
+        <h2>Sign In</h2>
+        
+        <form method="POST" action="">
+            <label>Username</label>
+            <input type="text" name="username" required>
+
+            <label>Password</label>
+            <input type="password" name="password" required>
+
+            <button type="submit" name="login">Sign In</button>
+        </form>
+
+        <?php if (!empty($error)) { ?>
+            <p class="error"><?php echo $error; ?></p>
+        <?php } ?>
+
+        <p class="authorized">Authorized Personnel Only</p>
+    </div>
+</div>
+
+<script src="../assets/js/login.js"></script>
+</body>
+</html>
+
+
+================ END OF COMPILATION ================

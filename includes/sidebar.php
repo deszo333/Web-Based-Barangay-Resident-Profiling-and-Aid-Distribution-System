@@ -22,11 +22,13 @@ $sidebarRole = $_SESSION['role'] ?? 'staff';
                     <i class="fa-solid fa-house"></i> <span>Households</span>
                 </a>
             </li>
+            <?php if ($sidebarRole === 'admin'): ?>
             <li>
                 <a href="aid-program-setup.php" class="<?= ($currentPage == 'aid-program-setup.php') ? 'active' : '' ?>">
                     <i class="fa-solid fa-hand-holding-heart"></i> <span>Aid Programs</span>
                 </a>
             </li>
+            <?php endif; ?>
         </ul>
     </div>
 
@@ -67,11 +69,6 @@ $sidebarRole = $_SESSION['role'] ?? 'staff';
             <li>
                 <a href="account-man.php" class="<?= ($currentPage == 'account-man.php') ? 'active' : '' ?>">
                     <i class="fa-solid fa-cogs"></i> <span>Account Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="../public/signup.php" class="<?= ($currentPage == 'signup.php') ? 'active' : '' ?>">
-                    <i class="fa-solid fa-user-plus"></i> <span>Create Staff Account</span>
                 </a>
             </li>
         </ul>

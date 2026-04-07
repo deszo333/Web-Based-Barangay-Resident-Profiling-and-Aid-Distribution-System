@@ -119,7 +119,7 @@ if (isset($_SESSION['role'])) {
             } else {
                 $btnText = "View Report";
                 $btnStyle = "background-color: #4b5563; color: white;"; // Gray
-                $btnLink = "reports-logs.php?program_id={$row['id']}"; // Route completed straight to reports
+                $btnLink = "reports-logs.php?program_id={$row['id']}&program_name=" . urlencode($row['program_name']); // Route completed straight to reports
             }
 
             echo "

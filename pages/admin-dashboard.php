@@ -208,10 +208,14 @@ fetch("../assets/popup/popup.html")
         popupScript.onload = () => {
             const dashScript = document.createElement("script");
             dashScript.src = "../assets/js/admins-dashboard.js";
+            dashScript.onload = () => {
+                if (typeof window.initAdminsDashboard === 'function') window.initAdminsDashboard();
+            };
             document.body.appendChild(dashScript);
         };
         document.body.appendChild(popupScript);
-    });
+    })
+    .catch(err => console.error('Popup HTML load error:', err));
 </script>
 
 <script src="../includes/sidebarss.js" defer></script>

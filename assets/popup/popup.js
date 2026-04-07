@@ -1,6 +1,7 @@
 (function () {
 
     let overlay, box, title, message, actions, closeBtn, icon;
+    let currentType = null;  // Track popup type to trigger reload on success
 
     function init() {
         overlay = document.getElementById("popupOverlay");
@@ -11,17 +12,25 @@
         closeBtn = document.getElementById("popupClose");
         icon = document.getElementById("popupIcon");
 
-        overlay.addEventListener("click", close);
+        // Only close if clicking the dark background (overlay), not the white box
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                close();
+            }
+        });
         closeBtn.addEventListener("click", close);
     }
 
     function open({
         title: t = "Message",
         message: m = "",
-        type = "info", // info | warning | danger | success
-        onOk = null
+        type = "info",
+        onOk = null,
+        showCancel = null   // null = auto-detect (show cancel only for confirm flows)
     }) {
         if (!overlay) init();
+        
+        currentType = type;  // Store the type so close() can trigger refresh if success
 
         title.innerText = t;
         message.innerHTML = m;
@@ -37,19 +46,22 @@
         icon.innerHTML = icons[type] || icons.info;
         icon.className = `popup-icon ${type}`;
 
-        // Cancel button — always shown when there is an onOk action
-        if (onOk) {
+        // Show cancel only when explicitly a confirmation (onOk and not success/info result)
+        // Auto-detect: if showCancel is null, only show cancel for warning/danger with onOk
+        const shouldShowCancel = showCancel !== null
+            ? showCancel
+            : (onOk !== null && (type === "warning" || type === "danger"));
+
+        if (shouldShowCancel) {
             const cancelBtn = document.createElement("button");
             cancelBtn.textContent = "Cancel";
             cancelBtn.className = "btn-secondary";
-            cancelBtn.onclick = () => {
-                close();
-            };
+            cancelBtn.onclick = () => { close(); };
             actions.appendChild(cancelBtn);
         }
 
         const okBtn = document.createElement("button");
-        okBtn.textContent = onOk ? "Confirm" : "OK";
+        okBtn.textContent = (shouldShowCancel) ? "Confirm" : "OK";
         okBtn.className = type === "danger" ? "btn-danger" : "btn-primary";
         okBtn.onclick = () => {
             if (onOk) onOk();
@@ -69,6 +81,13 @@
     function close() {
         overlay.classList.remove("show");
         box.classList.remove("show");
+        
+        // GLOBAL SUCCESS REFRESH: If this was a success message, ALWAYS reload!
+        if (currentType === "success") {
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);  // Wait for CSS animation to complete
+        }
     }
 
     window.Popup = { open, close };

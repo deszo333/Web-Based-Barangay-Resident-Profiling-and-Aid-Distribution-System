@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+window.initAccountMan = function() {
     
     document.addEventListener("click", function (e) {
         const btn = e.target.closest(".deactivate") || e.target.closest(".activate");
@@ -157,4 +157,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-});
+};
+
+// Call immediately if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initAccountMan);
+} else {
+    window.initAccountMan();
+}

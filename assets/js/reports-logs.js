@@ -1,10 +1,43 @@
-document.addEventListener("DOMContentLoaded", () => {
+window.initReportsLogs = function() {
 
     const seeMoreBtn = document.querySelector(".see-more-btn");
     const listWrapper = document.querySelector(".program-list-wrapper");
     const hiddenPrograms = document.querySelectorAll(".hidden-program");
 
     let expanded = false;
+
+    // ================================
+    // AUTO-SELECT PROGRAM FROM URL
+    // ================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const programNameFromUrl = urlParams.get("program_name");
+
+    if (programNameFromUrl) {
+        // Wait for dropdown to be populated, then auto-select and generate report
+        const reportType = document.getElementById("reportType");
+        const generateBtn = document.querySelector(".generate-report");
+        
+        if (reportType) {
+            // Try to select immediately
+            reportType.value = programNameFromUrl;
+            
+            // If value exists, trigger the generate report flow
+            if (reportType.value === programNameFromUrl) {
+                // Delay to ensure DOM is ready
+                setTimeout(() => {
+                    // Manually trigger the change event to load aid types
+                    reportType.dispatchEvent(new Event("change"));
+                    
+                    // Then trigger report generation after aid type loads
+                    setTimeout(() => {
+                        if (generateBtn) {
+                            generateBtn.click();
+                        }
+                    }, 500);
+                }, 100);
+            }
+        }
+    }
 
     // ================================
     // INIT CHARTS FUNCTION
@@ -227,4 +260,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-});
+};
+
+// Call immediately if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initReportsLogs);
+} else {
+    window.initReportsLogs();
+}

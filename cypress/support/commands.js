@@ -23,3 +23,16 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+
+Cypress.Commands.add('login', (username, password) => {
+    // Uses the baseUrl defined in cypress.config.js
+    cy.visit('/public/login.php'); 
+    
+    // Types into the exact fields from your login.php
+    cy.get('input[name="username"]').type(username);
+    cy.get('input[name="password"]').type(password);
+    
+    // Clicks the specific submit button
+    cy.get('button[type="submit"][name="login"]').click();
+});

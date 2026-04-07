@@ -1,2 +1,14 @@
 
 .env
+./m
+node_modules/
+cypress/
+dist/
+build/
+.DS_Store
+*.log
+npm-debug.log
+yarn-error.log
+.vscode/
+.idea/
+vendor/

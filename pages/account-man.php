@@ -260,22 +260,26 @@ while ($row = mysqli_fetch_assoc($result)) {
             </div>
             <div>
                 <label style="font-weight:600; font-size:13px; color:#475569;">Username <span style="color:red;">*</span></label>
-                <input type="text" name="username" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                <input type="text" name="username" required autocomplete="new-password" style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
             </div>
             
             <div>
                 <label style="font-weight:600; font-size:13px; color:#475569;">Password <span style="color:red;">*</span></label>
                 <div style="position: relative; margin-top: 5px;">
-                    <input type="password" name="password" id="addPassword" required style="width:100%; padding:10px; padding-right:40px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
-                    <i class="fa-solid fa-eye" id="toggleAddPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
+                    <input type="password" name="password" id="addPassword" required autocomplete="new-password" style="width:100%; padding:10px; padding-right:40px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    <span id="toggleAddPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; padding: 5px; color: #64748b;">
+                        <i class="fa-solid fa-eye"></i>
+                    </span>
                 </div>
             </div>
 
             <div>
                 <label style="font-weight:600; font-size:13px; color:#475569;">Confirm Password <span style="color:red;">*</span></label>
                 <div style="position: relative; margin-top: 5px;">
-                    <input type="password" name="confirm_password" id="addConfirmPassword" required style="width:100%; padding:10px; padding-right:40px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
-                    <i class="fa-solid fa-eye" id="toggleAddConfirmPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
+                    <input type="password" name="confirm_password" id="addConfirmPassword" required autocomplete="new-password" style="width:100%; padding:10px; padding-right:40px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    <span id="toggleAddConfirmPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; padding: 5px; color: #64748b;">
+                        <i class="fa-solid fa-eye"></i>
+                    </span>
                 </div>
             </div>
 
@@ -288,7 +292,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             </div>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
                 <button type="button" id="closeAddAccountBtn" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#e2e8f0; color:#475569; font-weight:600;">Cancel</button>
-                <button type="submit" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#16a34a; color:white; font-weight:600;">Save Account</button>
+                <button type="submit" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#16a34a; color:white; font-weight:600; min-width:120px;">Save Account</button>
             </div>
         </form>
     </div>

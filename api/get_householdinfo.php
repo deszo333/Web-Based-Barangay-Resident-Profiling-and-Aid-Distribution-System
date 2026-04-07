@@ -36,7 +36,7 @@ if ($result->num_rows === 0) {
 $household = $result->fetch_assoc();
 $household_id = $household['household_id'];
 
-// Get household members as a comma-separated string
+// Get household members as a comma-separated string (includes head of family)
 $members_stmt = $conn->prepare("SELECT GROUP_CONCAT(CONCAT(first_name, ' ', last_name) SEPARATOR ', ') AS members FROM registered_resi WHERE household_id = ?");
 $members_stmt->bind_param("i", $household_id);
 $members_stmt->execute();

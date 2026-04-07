@@ -1,0 +1,23 @@
+{
+  "name": "halo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "cypress.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deszo333/Web-Based-Barangay-Resident-Profiling-and-Aid-Distribution-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deszo333/Web-Based-Barangay-Resident-Profiling-and-Aid-Distribution-System/issues"
+  },
+  "homepage": "https://github.com/deszo333/Web-Based-Barangay-Resident-Profiling-and-Aid-Distribution-System#readme",
+  "devDependencies": {
+    "cypress": "^15.13.0"
+  }
+}

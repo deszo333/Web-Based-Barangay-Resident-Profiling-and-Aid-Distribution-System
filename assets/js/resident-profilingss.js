@@ -33,25 +33,84 @@ window.initResidentProfiling = function() {
     const rfidInput = document.getElementById("rfidInput");
 
         /* =========================
-    AUTO CALCULATE AGE
+    AUTO CALCULATE AGE AND BIRTHDATE VALIDATION
     ========================= */
     const birthdateInput = document.querySelector("input[name='birthdate']");
     const ageInput = document.querySelector("input[name='age']");
+    
+    // Helper function to validate birthdate
+    const validateBirthdate = (dateString) => {
+        if (!dateString) {
+            return { valid: false, message: "Birthdate is required" };
+        }
+        
+        const birthDate = new Date(dateString);
+        const today = new Date();
+        
+        // Check if date is valid
+        if (isNaN(birthDate.getTime())) {
+            return { valid: false, message: "Invalid birthdate format" };
+        }
+        
+        // Check if birthdate is not in the future
+        if (birthDate > today) {
+            return { valid: false, message: "Birthdate cannot be in the future" };
+        }
+        
+        // Calculate age
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        // Check reasonable age range (0-150 years)
+        if (age < 0) {
+            return { valid: false, message: "Birthdate cannot be in the future" };
+        }
+        
+        if (age > 150) {
+            return { valid: false, message: "Age cannot exceed 150 years" };
+        }
+        
+        return { valid: true, age: age };
+    };
 
     if (birthdateInput && ageInput) {
         birthdateInput.addEventListener("change", function () {
-
-            const birthDate = new Date(this.value);
-            const today = new Date();
-
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
+            const validation = validateBirthdate(this.value);
+            
+            if (validation.valid) {
+                ageInput.value = validation.age;
+                birthdateInput.style.borderColor = "";
+                /// Remove any error message if present
+                const errorMsg = birthdateInput.parentElement?.querySelector('.birthdate-error');
+                if (errorMsg) errorMsg.remove();
+            } else {
+                ageInput.value = "";
+                birthdateInput.style.borderColor = "#dc3545";
+                
+                // Show error message
+                let errorMsg = birthdateInput.parentElement?.querySelector('.birthdate-error');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('div');
+                    errorMsg.className = 'birthdate-error';
+                    errorMsg.style.color = '#dc3545';
+                    errorMsg.style.fontSize = '12px';
+                    errorMsg.style.marginTop = '4px';
+                    birthdateInput.parentElement?.appendChild(errorMsg);
+                }
+                errorMsg.textContent = validation.message;
             }
-
-            ageInput.value = age;
+        });
+        
+        // Validate on blur as well
+        birthdateInput.addEventListener("blur", function () {
+            const validation = validateBirthdate(this.value);
+            if (!validation.valid && this.value) {
+                birthdateInput.style.borderColor = "#dc3545";
+            }
         });
     }
 
@@ -69,10 +128,11 @@ window.initResidentProfiling = function() {
                 voterIdInput.style.display = "block";
                 voterIdInput.required = false;
                 voterIdInput.value = ""; 
+                voterIdInput.placeholder = "Optional - Enter voter registration number if available";
             } else {
                 voterIdInput.style.display = "none";
                 voterIdInput.required = false;
-                voterIdInput.value = "Not Registered"; 
+                voterIdInput.value = ""; 
             }
         });
     }
@@ -387,6 +447,19 @@ if (form) {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
+        // VALIDATE BIRTHDATE before any submission
+        const birthdateValue = document.querySelector("input[name='birthdate']").value;
+        const birthdateValidation = validateBirthdate(birthdateValue);
+        
+        if (!birthdateValidation.valid) {
+            Popup.open({
+                title: "Invalid Birthdate",
+                message: birthdateValidation.message,
+                type: "danger"
+            });
+            return;
+        }
+
         const residentId = document.getElementById("resident_id").value;
 
         const isUpdate = residentId !== "";
@@ -567,13 +640,21 @@ if (form) {
             const idInput = document.getElementById("voterIdInput");
             
             if (voterVal && voterVal !== "Not Registered") {
+                // If there's a voter value and it's not "Not Registered", they are a registered voter
                 statusDropdown.value = "Yes";
                 idInput.style.display = "block";
-                idInput.value = voterVal;
+                
+                // If the value is "Registered - No Number", clear the input, otherwise show the number
+                if (voterVal === "Registered - No Number") {
+                    idInput.value = "";
+                } else {
+                    idInput.value = voterVal;
+                }
             } else {
+                // Not registered
                 statusDropdown.value = "No";
                 idInput.style.display = "none";
-                idInput.value = "Not Registered";
+                idInput.value = "";
             }
         }
 

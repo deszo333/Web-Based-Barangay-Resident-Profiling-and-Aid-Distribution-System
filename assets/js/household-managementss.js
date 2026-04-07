@@ -204,13 +204,16 @@ if (searchInput) {
             document.getElementById("pickerCount").innerText = tempSelectedMembers.length;
 
             document.querySelectorAll(".picker-action").forEach(btn => {
-                const id = btn.dataset.id; 
+                const id = btn.dataset.id;
+                const role = btn.dataset.role; // Get the role to determine proper text
+                
                 if (tempSelectedMembers.some(m => m.id === id)) {
                     btn.classList.add("selected-state");
                     btn.innerHTML = `<i class="fa-solid fa-check"></i> Selected`;
                 } else {
                     btn.classList.remove("selected-state");
-                    btn.innerHTML = `Select`;
+                    // Use "Transfer" text for members from other households, "Select" for available
+                    btn.innerHTML = role === "Available" ? `Select` : role === "MEMBER" ? `Transfer` : `Select`;
                 }
             });
         } else {
@@ -427,13 +430,17 @@ if (searchInput) {
             tempSelectedMembers = [];
             const ids = (editBtn.dataset.memberids || "").split(",");
             const names = (editBtn.dataset.membernames || "").split(",");
+            const currentHeadId = editBtn.dataset.headid; // Get the current head ID
             
             for(let i = 0; i < ids.length; i++) {
-                if(ids[i]) tempSelectedMembers.push({ id: ids[i], name: names[i].trim() });
+                // Skip adding the head of family to the temp members table
+                if(ids[i] && ids[i] !== currentHeadId) {
+                    tempSelectedMembers.push({ id: ids[i], name: names[i].trim() });
+                }
             }
             
-            if (membersIdInput) membersIdInput.value = ids.join(',');
-            if (membersInput) membersInput.value = names.join(', ');
+            if (membersIdInput) membersIdInput.value = tempSelectedMembers.map(m => m.id).join(',');
+            if (membersInput) membersInput.value = tempSelectedMembers.map(m => m.name).join(', ');
             renderMembersTable();
 
             if (saveBtn) saveBtn.innerText = "Update Household";
@@ -535,6 +542,9 @@ if (searchInput) {
                     
                     const countText = document.getElementById("pickerCount");
                     if (countText) countText.innerText = tempSelectedMembers.length;
+                    
+                    // Close picker after adding member so user can see the updated table
+                    togglePicker(false);
                 }
             };
 

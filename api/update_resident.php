@@ -20,11 +20,70 @@ $age         = $_POST['age'];
 $gender      = $_POST['gender'];
 $civil       = $_POST['civil_status'];
 $occupation  = $_POST['occupation'];
+$voter_status = $_POST['voter_status'] ?? 'No'; // Get voter status
 $voters_registration_no = trim($_POST['voters_registration_no'] ?? '');
 $contact     = trim($_POST['contact'] ?? '');
 
-if ($voters_registration_no === '') $voters_registration_no = "Not Registered";
+// ============================================
+// HANDLE VOTER REGISTRATION
+// ============================================
+// If voter status is "Yes" but no number provided, mark as registered without number
+if ($voter_status === 'Yes' && $voters_registration_no === '') {
+    $voters_registration_no = "Registered - No Number";
+} elseif ($voter_status === 'No' || empty($voter_status)) {
+    // If status is "No", mark as not registered
+    $voters_registration_no = "Not Registered";
+}
+
 if ($contact === '')               $contact = "N/A";
+
+if (empty($occupation)) {
+    $occupation = "N/A";
+}
+
+// ============================================
+// VALIDATE BIRTHDATE
+// ============================================
+$validation_error = null;
+
+// Check if birthdate is provided
+if (empty($birthdate)) {
+    $validation_error = "Birthdate is required";
+} else {
+    // Validate birthdate format (should be YYYY-MM-DD)
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthdate)) {
+        $validation_error = "Invalid birthdate format";
+    } else {
+        // Parse the birthdate
+        $birthdate_obj = DateTime::createFromFormat('Y-m-d', $birthdate);
+        
+        if (!$birthdate_obj) {
+            $validation_error = "Invalid date provided";
+        } else {
+            // Check if birthdate is not in the future
+            $today = new DateTime();
+            if ($birthdate_obj > $today) {
+                $validation_error = "Birthdate cannot be in the future";
+            } else {
+                // Calculate age
+                $interval = $today->diff($birthdate_obj);
+                $calculated_age = $interval->y;
+                
+                // Check reasonable age range (0-150 years)
+                if ($calculated_age > 150) {
+                    $validation_error = "Age cannot exceed 150 years";
+                }
+            }
+        }
+    }
+}
+
+// If validation failed, return error
+if ($validation_error) {
+    echo "error|" . json_encode(['message' => $validation_error]);
+    mysqli_close($conn);
+    exit();
+}
 
 // Fetch DB version BEFORE update
 $pre = mysqli_prepare($conn, "SELECT version FROM registered_resi WHERE id=?");

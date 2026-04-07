@@ -336,7 +336,7 @@ if (isset($_SESSION['role'])) {
             <div class="form-row" style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
                 <div class="form-field">
                     <label>Registered Voter? <span style="color:red;">*</span></label>
-                    <select id="voterStatus" required>
+                    <select id="voterStatus" name="voter_status" required>
                         <option value="" disabled selected>Select Status</option>
                         <option value="No">No</option>
                         <option value="Yes">Yes</option>

@@ -1,4 +1,7 @@
 window.initAccountMan = function() {
+    // FIX: Guard to prevent double-binding listeners!
+    if (window.amInitialized) return;
+    window.amInitialized = true;
     
     document.addEventListener("click", function (e) {
         const btn = e.target.closest(".deactivate") || e.target.closest(".activate");
@@ -14,7 +17,7 @@ window.initAccountMan = function() {
             Popup.open({
                 title: `Confirm ${actionText}`,
                 message: `Are you sure you want to ${actionText.toLowerCase()} this user account?`,
-                type: isDeactivating ? "warning" : "info",
+                type: "warning",
                 onOk: () => {
                     
                     fetch("../api/toggle_user_status.php", {
@@ -64,11 +67,17 @@ window.initAccountMan = function() {
         closeAddAccountBtn.addEventListener("click", () => {
             addAccountModal.style.display = "none";
             addAccountForm.reset();
+            // Reset form state
+            const submitBtn = addAccountForm.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = "Save Account";
+            submitBtn.disabled = false;
             // Reset icons back to closed eyes
             document.getElementById("addPassword").setAttribute("type", "password");
-            document.getElementById("toggleAddPassword").classList.replace("fa-eye-slash", "fa-eye");
+            document.getElementById("toggleAddPassword").classList.remove("fa-eye-slash");
+            document.getElementById("toggleAddPassword").classList.add("fa-eye");
             document.getElementById("addConfirmPassword").setAttribute("type", "password");
-            document.getElementById("toggleAddConfirmPassword").classList.replace("fa-eye-slash", "fa-eye");
+            document.getElementById("toggleAddConfirmPassword").classList.remove("fa-eye-slash");
+            document.getElementById("toggleAddConfirmPassword").classList.add("fa-eye");
         });
     }
 
@@ -79,7 +88,14 @@ window.initAccountMan = function() {
         toggleAddPassword.addEventListener("click", () => {
             const type = addPassword.getAttribute("type") === "password" ? "text" : "password";
             addPassword.setAttribute("type", type);
-            toggleAddPassword.classList.toggle("fa-eye-slash");
+            const icon = toggleAddPassword.querySelector("i");
+            if (type === "text") {
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
         });
     }
 
@@ -89,7 +105,14 @@ window.initAccountMan = function() {
         toggleAddConfirmPassword.addEventListener("click", () => {
             const type = addConfirmPassword.getAttribute("type") === "password" ? "text" : "password";
             addConfirmPassword.setAttribute("type", type);
-            toggleAddConfirmPassword.classList.toggle("fa-eye-slash");
+            const icon = toggleAddConfirmPassword.querySelector("i");
+            if (type === "text") {
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
         });
     }
 
@@ -111,48 +134,61 @@ window.initAccountMan = function() {
                 return; // Stop the submission!
             }
 
-            // 2. Visual feedback
-            const submitBtn = addAccountForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = "Saving...";
-            submitBtn.disabled = true;
+            // 2. Get form data for confirmation
+            const firstName = addAccountForm.querySelector('input[name="first_name"]').value;
+            const lastName = addAccountForm.querySelector('input[name="last_name"]').value;
+            const username = addAccountForm.querySelector('input[name="username"]').value;
+            const role = addAccountForm.querySelector('select[name="role"]').value;
 
-            const formData = new FormData(addAccountForm);
+            // 3. Ask for confirmation before creating account
+            Popup.open({
+                title: "Confirm Account Creation",
+                message: `Are you sure you want to create this account?\n\nName: ${firstName} ${lastName}\nUsername: ${username}\nRole: ${role}`,
+                type: "warning",
+                onOk: () => {
+                    // User confirmed - proceed with account creation
+                    const submitBtn = addAccountForm.querySelector('button[type="submit"]');
+                    submitBtn.innerHTML = "Saving...";
+                    submitBtn.disabled = true;
 
-            // 3. Send to API
-            fetch("../api/add_account_process.php", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                    const formData = new FormData(addAccountForm);
 
-                if (data.status === "success") {
-                    Popup.open({
-                        title: "Success!",
-                        message: "The new account has been successfully created.",
-                        type: "success",
-                        onOk: () => { location.reload(); }
-                    });
-                } else {
-                    Popup.open({
-                        title: "Error",
-                        message: data.message || "Failed to create account.",
-                        type: "danger"
+                    // 4. Send to API
+                    fetch("../api/add_account_process.php", {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            Popup.open({
+                                title: "Success!",
+                                message: "The new account has been successfully created.",
+                                type: "success",
+                                onOk: () => { location.reload(); }
+                            });
+                        } else {
+                            Popup.open({
+                                title: "Error",
+                                message: data.message || "Failed to create account.",
+                                type: "danger"
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error:", err);
+                        Popup.open({
+                            title: "System Error",
+                            message: "Could not connect to the server.",
+                            type: "danger"
+                        });
+                    })
+                    .finally(() => {
+                        // FIX: Hardcode reset text so it never gets stuck on "Saving..."
+                        submitBtn.innerHTML = "Save Account";
+                        submitBtn.disabled = false;
                     });
                 }
-            })
-            .catch(err => {
-                console.error("Error:", err);
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-                Popup.open({
-                    title: "System Error",
-                    message: "Could not connect to the server.",
-                    type: "danger"
-                });
             });
         });
     }

@@ -89,7 +89,7 @@ $search = $_GET['search'] ?? '';
                     <input type="text" name="search" id="searchInput" placeholder="Search users..." value="<?php echo htmlspecialchars($search); ?>">
                     <input type="hidden" name="status" value="<?php echo htmlspecialchars($status); ?>">
                 </form>
-                <button id="openAddAccountBtn" style="background-color: #16a34a; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; gap: 8px; align-items: center; white-space: nowrap;">
+                <button id="openAddAccountBtn" class="add-resident">
                     <i class="fa-solid fa-plus"></i> Add Account
                 </button>
             </div>
@@ -167,6 +167,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     $fullName = htmlspecialchars($row['first_name'] . ' ' . $row['last_name']);
     $username = htmlspecialchars($row['username']);
     $role = htmlspecialchars($row['role']);
+    $version = (int)$row['version'];
     
     // Safely get status and force lowercase for logic checks
     $currentStatus = strtolower(trim($row['status'] ?? 'active'));
@@ -180,12 +181,12 @@ while ($row = mysqli_fetch_assoc($result)) {
         <td><span class='status {$status_class}'>".$display_status."</span></td>
         <td style='display:flex; gap:8px;'>";
 
-    // Edit button
-    echo "<button class='edit' data-id='{$row['id']}' data-name='$fullName' data-username='$username' data-role='$role'>
-            <i class='fa-solid fa-pen'></i> Edit
+    // Edit button — icon-only, consistent with other pages, includes version for OCC
+    echo "<button class='edit' data-id='{$row['id']}' data-name='$fullName' data-username='$username' data-role='$role' data-version='$version' title='Edit'>
+            <i class='fa-solid fa-pen-to-square'></i>
           </button>";
 
-    // Toggle button
+    // Toggle button — original text style
     if ($currentStatus === 'active') {
         echo "<button class='deactivate' data-id='{$row['id']}'>
                 Deactivate
@@ -250,12 +251,23 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 </main>
 
-<!-- EDIT ACCOUNT MODAL -->
-<div id="editAccountModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:10px; width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-        <h2 style="margin-top:0; margin-bottom:20px; color:#1e293b; font-size: 20px;">Edit Account</h2>
-        <form id="editAccountForm" style="display:flex; flex-direction:column; gap:15px;">
+<!-- MODAL OVERLAY (consistent with other pages) -->
+<div class="modal-overlay" id="modalOverlay"></div>
+
+<!-- EDIT ACCOUNT MODAL — using global modal style like resident/household pages -->
+<div class="resident-modal" id="editAccountModal">
+    <div class="resident-modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fa-solid fa-user-pen" style="color:#144876; font-size:20px; margin-right:8px;"></i>
+                <h3 style="display:inline-block; margin:0; color:#144876;">Edit Account</h3>
+            </div>
+            <span class="close-btn" id="closeEditAccountBtn">&times;</span>
+        </div>
+
+        <form id="editAccountForm" style="display:flex; flex-direction:column; gap:15px; padding: 20px 0 0 0;">
             <input type="hidden" name="user_id" id="editUserId">
+            <input type="hidden" name="version" id="editVersion">
             <div>
                 <label style="font-weight:600; font-size:13px; color:#475569;">First Name <span style="color:red;">*</span></label>
                 <input type="text" name="first_name" id="editFirstName" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
@@ -276,18 +288,25 @@ while ($row = mysqli_fetch_assoc($result)) {
                 </select>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
-                <button type="button" id="closeEditAccountBtn" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#e2e8f0; color:#475569; font-weight:600;">Cancel</button>
+                <button type="button" id="cancelEditAccountBtn" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#e2e8f0; color:#475569; font-weight:600;">Cancel</button>
                 <button type="submit" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#16a34a; color:white; font-weight:600; min-width:120px;">Update Account</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- ADD ACCOUNT MODAL -->
-<div id="addAccountModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:10px; width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-        <h2 style="margin-top:0; margin-bottom:20px; color:#1e293b; font-size: 20px;">Add New Account</h2>
-        <form id="addAccountForm" style="display:flex; flex-direction:column; gap:15px;">
+<!-- ADD ACCOUNT MODAL — using global modal style -->
+<div class="resident-modal" id="addAccountModal">
+    <div class="resident-modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fa-solid fa-user-plus" style="color:#144876; font-size:20px; margin-right:8px;"></i>
+                <h3 style="display:inline-block; margin:0; color:#144876;">Add New Account</h3>
+            </div>
+            <span class="close-btn" id="closeAddAccountBtn">&times;</span>
+        </div>
+
+        <form id="addAccountForm" style="display:flex; flex-direction:column; gap:15px; padding: 20px 0 0 0;">
             <div>
                 <label style="font-weight:600; font-size:13px; color:#475569;">First Name <span style="color:red;">*</span></label>
                 <input type="text" name="first_name" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
@@ -329,7 +348,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 </select>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
-                <button type="button" id="closeAddAccountBtn" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#e2e8f0; color:#475569; font-weight:600;">Cancel</button>
+                <button type="button" id="cancelAddAccountBtn" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#e2e8f0; color:#475569; font-weight:600;">Cancel</button>
                 <button type="submit" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#16a34a; color:white; font-weight:600; min-width:120px;">Save Account</button>
             </div>
         </form>

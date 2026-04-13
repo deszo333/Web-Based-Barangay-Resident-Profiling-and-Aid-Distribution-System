@@ -1,6 +1,5 @@
 <?php
-// FIX: Pointing strictly to our portable MySQL port 3307 to avoid PC conflicts
-$conn = mysqli_connect("127.0.0.1", "root", "", "barangay_db", 3307);
+$conn = mysqli_connect("127.0.0.1", "root", "Password", "barangay_db", 3306);
 
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());

@@ -178,7 +178,12 @@ while ($row = mysqli_fetch_assoc($result)) {
         <td>{$username}</td>
         <td>{$role}</td>
         <td><span class='status {$status_class}'>".$display_status."</span></td>
-        <td>";
+        <td style='display:flex; gap:8px;'>";
+
+    // Edit button
+    echo "<button class='edit' data-id='{$row['id']}' data-name='$fullName' data-username='$username' data-role='$role'>
+            <i class='fa-solid fa-pen'></i> Edit
+          </button>";
 
     // Toggle button
     if ($currentStatus === 'active') {
@@ -244,6 +249,39 @@ while ($row = mysqli_fetch_assoc($result)) {
     </div>
 
 </main>
+
+<!-- EDIT ACCOUNT MODAL -->
+<div id="editAccountModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:10px; width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <h2 style="margin-top:0; margin-bottom:20px; color:#1e293b; font-size: 20px;">Edit Account</h2>
+        <form id="editAccountForm" style="display:flex; flex-direction:column; gap:15px;">
+            <input type="hidden" name="user_id" id="editUserId">
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">First Name <span style="color:red;">*</span></label>
+                <input type="text" name="first_name" id="editFirstName" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Last Name <span style="color:red;">*</span></label>
+                <input type="text" name="last_name" id="editLastName" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Username <span style="color:red;">*</span></label>
+                <input type="text" name="username" id="editUsername" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-weight:600; font-size:13px; color:#475569;">Role <span style="color:red;">*</span></label>
+                <select name="role" id="editRole" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                <button type="button" id="closeEditAccountBtn" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#e2e8f0; color:#475569; font-weight:600;">Cancel</button>
+                <button type="submit" style="padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#16a34a; color:white; font-weight:600; min-width:120px;">Update Account</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- ADD ACCOUNT MODAL -->
 <div id="addAccountModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">

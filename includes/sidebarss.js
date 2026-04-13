@@ -66,19 +66,47 @@ const strengthText = document.getElementById("strengthText");
 function closePassModal(callback) {
     if (!passModal) return;
     passModal.classList.remove("show");
+    
+    // Ensure modal is fully hidden before callback
     requestAnimationFrame(() => {
         setTimeout(() => {
             if (changeForm) changeForm.reset();
             if (strengthFill) strengthFill.style.width = "0%";
             if (strengthText) strengthText.textContent = "Password strength";
+            // Ensure modal is not interfering with popups
+            passModal.style.pointerEvents = "none";
             if (callback) callback();
         }, 200);
     });
 }
 
 if (changePasswordBtn && passModal) {
-    changePasswordBtn.addEventListener("click", () => { passModal.classList.add("show"); });
+    changePasswordBtn.addEventListener("click", () => { 
+        passModal.style.pointerEvents = "auto";  // Re-enable interactions
+        passModal.classList.add("show"); 
+    });
 }
+
+/* Toggle password visibility */
+const togglePasswordBtns = document.querySelectorAll(".toggle-password");
+togglePasswordBtns.forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const targetId = btn.getAttribute("data-target");
+        const input = document.getElementById(targetId);
+        if (input) {
+            const isPassword = input.type === "password";
+            input.type = isPassword ? "text" : "password";
+            // Toggle eye icon
+            const icon = btn.querySelector("i");
+            if (icon) {
+                icon.classList.toggle("fa-eye");
+                icon.classList.toggle("fa-eye-slash");
+            }
+        }
+    });
+});
+
 if (closePassBtn && passModal) {
     closePassBtn.addEventListener("click", () => { closePassModal(); });
 }
@@ -91,11 +119,38 @@ if (passModal) {
 if (changeForm) {
     changeForm.addEventListener("submit", (e) => {
         e.preventDefault();
+        const currentPassword = changeForm.querySelector("input[name='current_password']").value;
         const newPassword = changeForm.querySelector("input[name='new_password']").value;
         const confirmPassword = changeForm.querySelector("input[name='confirm_password']").value;
 
+        if (!currentPassword) {
+            Popup.open({ 
+                title: "Error", 
+                message: "Please enter your current password.", 
+                type: "danger",
+                showCancel: false 
+            });
+            return;
+        }
+
         if (newPassword !== confirmPassword) {
-            Popup.open({ title: "Error", message: "Passwords do not match.", type: "danger" });
+            Popup.open({ 
+                title: "Error", 
+                message: "New passwords do not match.", 
+                type: "danger",
+                showCancel: false 
+            });
+            return;
+        }
+
+        // Check minimum length first
+        if (newPassword.length < 6) {
+            Popup.open({ 
+                title: "Error", 
+                message: "Password must be at least 6 characters.", 
+                type: "danger",
+                showCancel: false 
+            });
             return;
         }
 
@@ -111,7 +166,8 @@ if (changeForm) {
                 title: "Weak Password",
                 message: "Your password is weak/medium. Are you sure you want to continue?",
                 type: "warning",
-                onOk: () => { submitPasswordForm(); }
+                onOk: () => { submitPasswordForm(); },
+                showCancel: true
             });
             return;
         }
@@ -128,18 +184,36 @@ function submitPasswordForm() {
     .then(res => res.text())
     .then(data => {
         closePassModal(() => {
+            // Ensure modal is fully hidden and not blocking popups
             setTimeout(() => {
                 if (data.toLowerCase().includes("success")) {
-                    Popup.open({ title: "Success", message: "Password changed successfully!", type: "success" });
+                    Popup.open({ 
+                        title: "Success", 
+                        message: "Password changed successfully!", 
+                        type: "success",
+                        showCancel: false 
+                    });
                 } else {
-                    Popup.open({ title: "Error", message: data, type: "danger" });
+                    Popup.open({ 
+                        title: "Error", 
+                        message: data, 
+                        type: "danger",
+                        showCancel: false 
+                    });
                 }
-            }, 50);
+            }, 300);
         });
     })
     .catch(() => {
         closePassModal(() => {
-            setTimeout(() => { Popup.open({ title: "Error", message: "Network error.", type: "danger" }); }, 50);
+            setTimeout(() => { 
+                Popup.open({ 
+                    title: "Error", 
+                    message: "Network error.", 
+                    type: "danger",
+                    showCancel: false 
+                }); 
+            }, 300);
         });
     });
 }

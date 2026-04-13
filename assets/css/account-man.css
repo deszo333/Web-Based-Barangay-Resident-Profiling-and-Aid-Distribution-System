@@ -461,6 +461,30 @@ input[type="date"] {
     cursor: pointer;
 }
 
+.edit {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.edit:hover {
+    background: #2563eb;
+}
+
+.deactivate:hover {
+    background: #7a1f1f;
+}
+
+.activate:hover {
+    background: #333;
+}
+
 
 .tabs-container {
     display: flex;
@@ -518,4 +542,21 @@ input[type="date"] {
         font-size: 13px;
     }
 
+}
+
+/* HIDE BROWSER PASSWORD REVEAL ICONS */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+input[type="password"] {
+    -webkit-appearance: none;
+    appearance: none;
 }

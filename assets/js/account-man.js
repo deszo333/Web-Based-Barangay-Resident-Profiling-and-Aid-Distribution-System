@@ -4,6 +4,32 @@ window.initAccountMan = function() {
     window.amInitialized = true;
     
     document.addEventListener("click", function (e) {
+        // Handle Edit button
+        const editBtn = e.target.closest(".edit");
+        if (editBtn) {
+            e.preventDefault();
+            const userId = editBtn.getAttribute("data-id");
+            const fullName = editBtn.getAttribute("data-name");
+            const username = editBtn.getAttribute("data-username");
+            const role = editBtn.getAttribute("data-role");
+            
+            // Parse full name into first and last name
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' ');
+            
+            // Populate form
+            document.getElementById("editUserId").value = userId;
+            document.getElementById("editFirstName").value = firstName;
+            document.getElementById("editLastName").value = lastName;
+            document.getElementById("editUsername").value = username;
+            document.getElementById("editRole").value = role;
+            
+            // Open modal
+            document.getElementById("editAccountModal").style.display = "flex";
+            return;
+        }
+
         const btn = e.target.closest(".deactivate") || e.target.closest(".activate");
         
         if (btn) {
@@ -49,6 +75,80 @@ window.initAccountMan = function() {
             });
         }
     });
+
+    // --- EDIT ACCOUNT MODAL LOGIC ---
+    const editAccountModal = document.getElementById("editAccountModal");
+    const closeEditAccountBtn = document.getElementById("closeEditAccountBtn");
+    const editAccountForm = document.getElementById("editAccountForm");
+
+    if (closeEditAccountBtn) {
+        closeEditAccountBtn.addEventListener("click", () => {
+            editAccountModal.style.display = "none";
+            editAccountForm.reset();
+        });
+    }
+
+    if (editAccountForm) {
+        editAccountForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            
+            const userId = document.getElementById("editUserId").value;
+            const firstName = document.getElementById("editFirstName").value;
+            const lastName = document.getElementById("editLastName").value;
+            const username = document.getElementById("editUsername").value;
+            const role = document.getElementById("editRole").value;
+
+            // Ask for confirmation before updating account
+            Popup.open({
+                title: "Confirm Account Update",
+                message: `Are you sure you want to update this account?\n\nName: ${firstName} ${lastName}\nUsername: ${username}\nRole: ${role}`,
+                type: "warning",
+                onOk: () => {
+                    // User confirmed - proceed with account update
+                    const submitBtn = editAccountForm.querySelector('button[type="submit"]');
+                    submitBtn.innerHTML = "Updating...";
+                    submitBtn.disabled = true;
+
+                    const formData = new FormData(editAccountForm);
+
+                    // Send to API
+                    fetch("../api/update_account_process.php", {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            Popup.open({
+                                title: "Success!",
+                                message: "The account has been successfully updated.",
+                                type: "success",
+                                onOk: () => { location.reload(); }
+                            });
+                        } else {
+                            Popup.open({
+                                title: "Error",
+                                message: data.message || "Failed to update account.",
+                                type: "danger"
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error:", err);
+                        Popup.open({
+                            title: "System Error",
+                            message: "Could not connect to the server.",
+                            type: "danger"
+                        });
+                    })
+                    .finally(() => {
+                        submitBtn.innerHTML = "Update Account";
+                        submitBtn.disabled = false;
+                    });
+                }
+            });
+        });
+    }
 
     // --- ADD ACCOUNT MODAL LOGIC ---
     const addAccountModal = document.getElementById("addAccountModal");

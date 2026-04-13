@@ -54,9 +54,14 @@ if (isset($_SESSION['role'])) {
     <div class="rfid-summary">
         <?php
         $modal_conn = $conn;
-        $tot = mysqli_fetch_assoc(mysqli_query($modal_conn, "SELECT COUNT(*) as c FROM rfid_tags"))['c'];
-        $act = mysqli_fetch_assoc(mysqli_query($modal_conn, "SELECT COUNT(*) as c FROM rfid_tags WHERE status='Active'"))['c'];
-        $dis = mysqli_fetch_assoc(mysqli_query($modal_conn, "SELECT COUNT(*) as c FROM rfid_tags WHERE status!='Active'"))['c'];
+        $tot_query = mysqli_query($modal_conn, "SELECT COUNT(*) as c FROM rfid_tags rt JOIN registered_household h ON rt.household_id = h.id WHERE h.is_archived = 0");
+        $tot = $tot_query ? mysqli_fetch_assoc($tot_query)['c'] : 0;
+        
+        $act_query = mysqli_query($modal_conn, "SELECT COUNT(*) as c FROM rfid_tags rt JOIN registered_household h ON rt.household_id = h.id WHERE h.is_archived = 0 AND rt.status='Active'");
+        $act = $act_query ? mysqli_fetch_assoc($act_query)['c'] : 0;
+        
+        $dis_query = mysqli_query($modal_conn, "SELECT COUNT(*) as c FROM rfid_tags rt JOIN registered_household h ON rt.household_id = h.id WHERE h.is_archived = 0 AND rt.status!='Active'");
+        $dis = $dis_query ? mysqli_fetch_assoc($dis_query)['c'] : 0;
         ?>
         <div class="rfid-summary-card-1">
             <div><p>Total Tags Issued</p><h3><?= $tot ?></h3></div>

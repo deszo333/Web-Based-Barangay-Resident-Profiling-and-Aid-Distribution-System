@@ -109,7 +109,10 @@ if (isset($_SESSION['role'])) {
 
         $count_result = mysqli_query($conn, $count_sql);
         $total_records = mysqli_fetch_assoc($count_result)['total'];
+        
+        // FIX: Prevent total pages from ever being 0
         $total_pages = ceil($total_records / $limit);
+        if ($total_pages < 1) $total_pages = 1; 
 
         // Clamp $page
         if ($page < 1) $page = 1;
@@ -178,8 +181,7 @@ if (isset($_SESSION['role'])) {
         } else {
             echo "<tr><td colspan='6' style='text-align:center; padding:20px; color:#777;'>No households found.</td></tr>";
         }
-
-        mysqli_close($conn);
+        // FIX: Removed early mysqli_close so the modal can reuse the connection
         ?>
         </tbody>
     </table>
@@ -282,8 +284,7 @@ if (isset($_SESSION['role'])) {
             </thead>
             <tbody>
                 <?php
-                $conn = mysqli_connect("localhost", "root", "Password", "barangay_db");
-                
+                // FIX: Use the global connection and check if the query succeeds
                 $res = mysqli_query($conn, "
                     SELECT r.id, r.first_name, r.middle_name, r.last_name, r.address,
                            r.household_id, h.household_number, h.head_of_family_id
@@ -291,8 +292,9 @@ if (isset($_SESSION['role'])) {
                     LEFT JOIN registered_household h ON r.household_id = h.id
                     WHERE r.is_archived = 0 ORDER BY r.last_name
                 ");
-
-                while ($r = mysqli_fetch_assoc($res)) {
+                
+                if ($res && mysqli_num_rows($res) > 0) {
+                    while ($r = mysqli_fetch_assoc($res)) {
                     $fullName = trim($r['first_name'] . ' ' . $r['middle_name'] . ' ' . $r['last_name']);
                     $address = htmlspecialchars($r['address']);
                     $hId = $r['household_id'] ? $r['household_id'] : ""; 
@@ -334,8 +336,11 @@ if (isset($_SESSION['role'])) {
                             </button>
                         </td>
                     </tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='3' style='text-align:center; color:#777;'>No residents available.</td></tr>";
                 }
-                mysqli_close($conn);
+                // FIX: Let PHP auto-close the DB connection at the end of the script
                 ?>
             </tbody>
         </table>

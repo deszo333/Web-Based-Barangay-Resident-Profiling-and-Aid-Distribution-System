@@ -29,10 +29,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
         $error = "Please fill in all fields.";
     } else {
 
-        // Get user with role
+        // Get user with role and status
         $stmt = mysqli_prepare(
             $conn,
-            "SELECT id, username, password, role FROM users WHERE username = ?"
+            "SELECT id, username, password, role, status FROM users WHERE username = ?"
         );
         mysqli_stmt_bind_param($stmt, "s", $username);
         mysqli_stmt_execute($stmt);
@@ -41,7 +41,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
         if ($result && mysqli_num_rows($result) === 1) {
             $user = mysqli_fetch_assoc($result);
 
-            if (password_verify($password, $user['password'])) {
+            // Check if account is active
+            if ($user['status'] !== 'Active') {
+                $error = "Your account has been deactivated. Please contact the administrator.";
+            } elseif (password_verify($password, $user['password'])) {
 
                 // Save session data
                 $_SESSION['user_id'] = $user['id'];

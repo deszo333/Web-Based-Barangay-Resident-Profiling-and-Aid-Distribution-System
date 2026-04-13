@@ -168,16 +168,45 @@ mysqli_close($conn);
     <div class="modal-box">
         <h2>Change Password</h2>
         <form id="changePasswordForm">
-            <label>New Password</label>
-            <input type="password" name="new_password" id="newPassword" required>
-            <div class="strength-wrapper">
-                <div class="strength-bar">
-                    <div id="strengthFill"></div>
+            <!-- Current Password -->
+            <div class="password-input-group">
+                <label>Current Password</label>
+                <div class="password-field">
+                    <input type="password" name="current_password" id="currentPassword" required>
+                    <button type="button" class="toggle-password" data-target="currentPassword">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
                 </div>
-                <small id="strengthText">Password strength</small>
             </div>
-            <label>Confirm New Password</label>
-            <input type="password" name="confirm_password" required>
+
+            <!-- New Password -->
+            <div class="password-input-group">
+                <label>New Password</label>
+                <div class="password-field">
+                    <input type="password" name="new_password" id="newPassword" required>
+                    <button type="button" class="toggle-password" data-target="newPassword">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <div class="strength-wrapper">
+                    <div class="strength-bar">
+                        <div id="strengthFill"></div>
+                    </div>
+                    <small id="strengthText">Password strength</small>
+                </div>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="password-input-group">
+                <label>Confirm New Password</label>
+                <div class="password-field">
+                    <input type="password" name="confirm_password" id="confirmPassword" required>
+                    <button type="button" class="toggle-password" data-target="confirmPassword">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
             <div class="modal-actions">
                 <button type="button" id="closeChangePassword">Cancel</button>
                 <button type="submit">Save</button>

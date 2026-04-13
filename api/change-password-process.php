@@ -4,8 +4,30 @@ require_once __DIR__ . '/../config/auth_check.php';
 require_once __DIR__ . '/../config/db_connect.php';
 
 $user_id = $_SESSION['user_id'];
+$current_password = $_POST['current_password'] ?? '';
 $new_password = $_POST['new_password'] ?? '';
 $confirm_password = $_POST['confirm_password'] ?? '';
+
+if (empty($current_password)) {
+    die("Current password is required.");
+}
+
+// Fetch current password hash from database
+$sql = "SELECT password FROM users WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+
+if (!$user) {
+    die("User not found.");
+}
+
+// Verify current password
+if (!password_verify($current_password, $user['password'])) {
+    die("Current password is incorrect.");
+}
 
 if ($new_password !== $confirm_password) {
     die("New passwords do not match.");

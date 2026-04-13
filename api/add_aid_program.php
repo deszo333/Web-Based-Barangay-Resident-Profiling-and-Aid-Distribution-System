@@ -66,6 +66,15 @@ if ($id == "") {
     );
     mysqli_stmt_execute($stmt);
     
+    // VERIFY THE UPDATE ACTUALLY HAPPENED (OCC check)
+    $affected_rows = mysqli_stmt_affected_rows($stmt);
+    if ($affected_rows === 0) {
+        echo "conflict";
+        mysqli_stmt_close($stmt);
+        mysqli_close($conn);
+        exit;
+    }
+    
     // === TRIGGER AUDIT LOG FOR AID PROGRAM EDIT ===
     $current_user_id = $_SESSION['user_id'] ?? null;
     $audit_data = [

@@ -146,26 +146,61 @@ window.initAccountMan = function() {
                         method: "POST",
                         body: formData
                     })
-                    .then(res => res.json())
+                    .then(res => res.text())
                     .then(data => {
-                        if (data.status === "success") {
+                        console.log("RAW SERVER RESPONSE:", JSON.stringify(data));
+                        console.log("TRIMMED:", data.trim());
+
+                        let response = data.trim();
+                        let debugInfo = null;
+
+                        if (response.includes("|")) {
+                            const parts = response.split("|");
+                            response = parts[0];
+                            try {
+                                debugInfo = JSON.parse(parts[1]);
+                                console.log("OCC DEBUG INFO:", debugInfo);
+                            } catch (e) {
+                                console.log("Could not parse debug JSON");
+                            }
+                        }
+
+                        if (response === 'success') {
+                            // Immediately bump the version in the edit button's data attribute
+                            const editBtn = document.querySelector(`.edit[data-id='${userId}']`);
+                            if (editBtn) {
+                                const currentVersion = parseInt(editBtn.dataset.version || "1");
+                                editBtn.dataset.version = currentVersion + 1;
+                            }
+
+                            // Also update the hidden version input so the form itself is current
+                            const versionInput = document.getElementById("editVersion");
+                            if (versionInput) {
+                                versionInput.value = parseInt(versionInput.value || "1") + 1;
+                            }
+
+                            closeModalEl(editAccountModal, editAccountForm);
+
                             Popup.open({
                                 title: "Success!",
                                 message: "The account has been successfully updated.",
                                 type: "success",
                                 onOk: () => { location.reload(); }
                             });
-                        } else if (data.status === "conflict") {
-                            closeModalEl(editAccountModal, editAccountForm);
+                        }
+                        // === START OCC ALGORITHM: HANDLE CONFLICT RESPONSE ===
+                        else if (response === 'conflict') {
                             Popup.open({
                                 title: "Update Conflict",
-                                message: "Another admin updated this account while you were viewing it. Please refresh and try again.",
+                                message: "Data changed! Another admin updated this record while you were viewing it. Please close and reopen the record to try again.",
                                 type: "danger"
                             });
-                        } else {
+                        }
+                        // === END OCC ALGORITHM ===
+                        else {
                             Popup.open({
                                 title: "Error",
-                                message: data.message || "Failed to update account.",
+                                message: data,
                                 type: "danger"
                             });
                         }

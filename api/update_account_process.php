@@ -2,22 +2,29 @@
 require_once __DIR__ . '/../config/auth_check.php';
 require_once __DIR__ . '/../config/db_connect.php';
 
-header('Content-Type: application/json');
-
 // Security check: Only admins can update accounts
 if ($_SESSION['role'] !== 'admin') {
-    echo json_encode(['status' => 'error', 'message' => 'Unauthorized. Only admins can update accounts.']);
+    echo "error|" . json_encode(['message' => 'Unauthorized. Only admins can update accounts.']);
     exit;
 }
 
 $user_id = (int)($_POST['user_id'] ?? 0);
+$version = isset($_POST['version']) && $_POST['version'] !== '' ? (int)$_POST['version'] : null;
 $fname = trim($_POST['first_name'] ?? '');
 $lname = trim($_POST['last_name'] ?? '');
 $user  = trim($_POST['username'] ?? '');
 $role  = $_POST['role'] ?? 'staff';
 
+// ============================================
+// OCC: CHECK VERSION PARAMETER
+// ============================================
+if ($version === null) {
+    echo "error|" . json_encode(['message' => 'Version information missing']);
+    exit;
+}
+
 if (!$user_id || !$fname || !$lname || !$user) {
-    echo json_encode(['status' => 'error', 'message' => 'All fields are required.']);
+    echo "error|" . json_encode(['message' => 'All fields are required.']);
     exit;
 }
 
@@ -29,7 +36,7 @@ mysqli_stmt_execute($get_current_stmt);
 mysqli_stmt_store_result($get_current_stmt);
 
 if (mysqli_stmt_num_rows($get_current_stmt) === 0) {
-    echo json_encode(['status' => 'error', 'message' => 'User not found.']);
+    echo "error|" . json_encode(['message' => 'User not found.']);
     mysqli_stmt_close($get_current_stmt);
     exit;
 }
@@ -47,26 +54,46 @@ if ($user !== $current_username) {
     mysqli_stmt_store_result($check_stmt);
 
     if (mysqli_stmt_num_rows($check_stmt) > 0) {
-        echo json_encode(['status' => 'error', 'message' => 'That username is already taken.']);
+        echo "error|" . json_encode(['message' => 'That username is already taken.']);
         mysqli_stmt_close($check_stmt);
         exit;
     }
     mysqli_stmt_close($check_stmt);
 }
 
-// Update the account
-$update_sql = "UPDATE users SET first_name = ?, last_name = ?, username = ?, role = ? WHERE id = ?";
-$stmt = mysqli_prepare($conn, $update_sql);
-mysqli_stmt_bind_param($stmt, "ssssi", $fname, $lname, $user, $role, $user_id);
+// ============================================
+// OCC: FETCH DB VERSION BEFORE UPDATE
+// ============================================
+$pre = mysqli_prepare($conn, "SELECT version FROM users WHERE id=?");
+mysqli_stmt_bind_param($pre, "i", $user_id);
+mysqli_stmt_execute($pre);
+mysqli_stmt_bind_result($pre, $pre_version);
+mysqli_stmt_fetch($pre);
+mysqli_stmt_close($pre);
 
-if (mysqli_stmt_execute($stmt)) {
+// ============================================
+// OCC: PERFORM UPDATE WITH VERSION CHECK
+// ============================================
+$update_sql = "UPDATE users SET first_name = ?, last_name = ?, username = ?, role = ?, version = version + 1 WHERE id = ? AND version = ?";
+$stmt = mysqli_prepare($conn, $update_sql);
+mysqli_stmt_bind_param($stmt, "ssssii", $fname, $lname, $user, $role, $user_id, $version);
+mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
+
+// ============================================
+// OCC: VERIFY THE UPDATE ACTUALLY HAPPENED
+// ============================================
+$pre_version = (int) $pre_version;
+
+if ($pre_version === $version) {
+    // Our version matched what was in DB before update = we owned this update
     // Log the audit
     log_audit($conn, (int)$_SESSION['user_id'], 'UPDATE', 'users', "Updated user account ID: $user_id (Username: $user, Role: $role)");
-    echo json_encode(['status' => 'success']);
+    echo "success";
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Database error while updating account.']);
+    // Version mismatch = conflict
+    echo "conflict";
 }
 
-mysqli_stmt_close($stmt);
 mysqli_close($conn);
 ?>

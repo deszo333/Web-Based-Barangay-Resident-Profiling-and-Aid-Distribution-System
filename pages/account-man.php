@@ -179,14 +179,9 @@ while ($row = mysqli_fetch_assoc($result)) {
         <td>{$username}</td>
         <td>{$role}</td>
         <td><span class='status {$status_class}'>".$display_status."</span></td>
-        <td style='display:flex; gap:8px;'>";
+        <td style='display:flex; gap:8px; justify-content:center; align-items:center;'>";
 
-    // Edit button — icon-only, consistent with other pages, includes version for OCC
-    echo "<button class='edit' data-id='{$row['id']}' data-name='$fullName' data-username='$username' data-role='$role' data-version='$version' title='Edit'>
-            <i class='fa-solid fa-pen-to-square'></i>
-          </button>";
-
-    // Toggle button — original text style
+    // Toggle button — original text style (FIRST)
     if ($currentStatus === 'active') {
         echo "<button class='deactivate' data-id='{$row['id']}'>
                 Deactivate
@@ -196,6 +191,11 @@ while ($row = mysqli_fetch_assoc($result)) {
                 Activate
               </button>";
     }
+
+    // Edit button — icon-only, consistent with other pages, includes version for OCC (SECOND)
+    echo "<button class='edit' data-id='{$row['id']}' data-name='$fullName' data-username='$username' data-role='$role' data-version='$version' title='Edit'>
+            <i class='fa-solid fa-pen-to-square'></i>
+          </button>";
 
     echo "</td>
     </tr>";
